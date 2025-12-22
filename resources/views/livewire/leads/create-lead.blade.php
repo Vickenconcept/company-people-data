@@ -51,6 +51,19 @@
             </div>
 
             <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Country (Optional)</label>
+                <input 
+                    wire:model="country" 
+                    type="text"
+                    placeholder="e.g., US, GB, FR, DE (2-letter country code)" 
+                    maxlength="2"
+                    class="w-full rounded-lg border-2 border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none text-gray-900 uppercase"
+                />
+                @error('country') <flux:text class="text-red-600">{{ $message }}</flux:text> @enderror
+                <flux:text class="text-sm text-gray-500">Optional: Filter companies by country (ISO 2-letter code, e.g., US, GB, FR)</flux:text>
+            </div>
+
+            <div>
                 <flux:text class="mb-2 block font-medium">Target Job Titles *</flux:text>
                 <div class="space-y-2">
                     <div class="flex gap-2">

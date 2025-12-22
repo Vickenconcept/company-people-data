@@ -16,6 +16,7 @@ class CreateLead extends Component
     public int $target_count = 10;
     public array $target_job_titles = ['CEO', 'CFO'];
     public string $new_job_title = '';
+    public ?string $country = null;
 
     public function addJobTitle(): void
     {
@@ -38,6 +39,7 @@ class CreateLead extends Component
             'target_count' => 'required|integer|min:1|max:100',
             'target_job_titles' => 'required|array|min:1',
             'target_job_titles.*' => 'string|max:100',
+            'country' => 'nullable|string|max:2', // ISO country code (2 letters)
         ]);
 
         $leadRequest = LeadRequest::create([
@@ -46,6 +48,7 @@ class CreateLead extends Component
             'reference_company_url' => $validated['reference_company_url'],
             'target_count' => $validated['target_count'],
             'target_job_titles' => $validated['target_job_titles'],
+            'country' => $validated['country'] ?? null,
             'status' => 'pending',
         ]);
 

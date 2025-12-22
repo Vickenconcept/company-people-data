@@ -117,13 +117,13 @@ class OpenAIService
     /**
      * Generate search criteria from ICP
      */
-    public function generateSearchCriteria(array $icpProfile): array
+    public function generateSearchCriteria(array $icpProfile, ?string $country = null): array
     {
         Log::info('🔍 OpenAIService: Generating search criteria', [
             'industry' => $icpProfile['industry'] ?? 'N/A',
         ]);
 
-        $prompt = $this->getSearchCriteriaPrompt($icpProfile);
+        $prompt = $this->getSearchCriteriaPrompt($icpProfile, $country);
 
         try {
             $response = Http::timeout(60)->withHeaders([
@@ -289,25 +289,38 @@ Please provide a JSON object with the following structure:
 }";
     }
 
-    protected function getSearchCriteriaPrompt(array $icp): string
+    protected function getSearchCriteriaPrompt(array $icp, ?string $country = null): string
     {
         $icpJson = json_encode($icp, JSON_PRETTY_PRINT);
+        $countryNote = $country ? "\n\nIMPORTANT: The user has specified to search in country: " . strtoupper($country) . ". Use this as the primary country in your response." : '';
 
-        return "Based on this ICP profile, generate search criteria for finding similar companies:
+        return "Based on this ICP profile, generate SPECIFIC search criteria for finding similar companies. Focus on the PRIMARY industry and avoid generic tech companies unless the ICP is actually a tech company.
 
-{$icpJson}
+{$icpJson}{$countryNote}
+
+IMPORTANT:
+- If the industry is \"Travel and Tourism\", find travel companies, NOT Google/Amazon/LinkedIn
+- If the industry is \"E-commerce\", find e-commerce companies, NOT generic tech giants
+- Focus on companies that actually match the industry and business model
+- Use specific, industry-relevant keywords
+- Avoid generic keywords that would match tech giants" . ($country ? "\n- Primary country should be: " . strtoupper($country) : "") . "
 
 Return a JSON object with:
 {
-  \"industry\": \"Primary industry to search\",
-  \"industries\": [\"Array of industries\"],
-  \"country\": \"Country code (e.g., US)\",
-  \"countries\": [\"Array of countries\"],
+  \"industry\": \"Primary industry name (exact match for Apollo API)\",
+  \"industries\": [\"Array of 3-5 specific related industries\"],
+  \"country\": \"" . ($country ? strtoupper($country) : "") . "\",
+  \"countries\": " . ($country ? "[\"" . strtoupper($country) . "\"]" : "[\"Array of top 5-10 target countries\"]") . ",
   \"company_size_min\": 0,
   \"company_size_max\": 10000,
-  \"keywords\": [\"Search keywords\"],
-  \"technologies\": [\"Technologies to filter by\"]
-}";
+  \"keywords\": [\"5-10 SPECIFIC industry-relevant keywords that would find similar companies\"],
+  \"technologies\": [\"Technologies specific to this industry\"]
+}
+
+Example for Travel company:
+- industry: \"Travel and Tourism\"
+- keywords: [\"travel booking\", \"tour operator\", \"travel agency\", \"vacation packages\", \"travel experiences\"]
+- NOT: [\"technology\", \"software\", \"platform\"]";
     }
 
     protected function getEmailGenerationPrompt(array $person, array $company, ?string $customMessage): string

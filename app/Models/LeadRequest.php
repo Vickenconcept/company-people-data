@@ -17,6 +17,7 @@ class LeadRequest extends Model
         'search_criteria',
         'target_count',
         'target_job_titles',
+        'country',
         'status',
         'error_message',
         'companies_found',

@@ -14,6 +14,18 @@
         </a>
     </div>
 
+    @if(session()->has('message'))
+        <div class="rounded-lg bg-green-50 border border-green-200 p-4 text-green-800">
+            {{ session('message') }}
+        </div>
+    @endif
+
+    @if(session()->has('error'))
+        <div class="rounded-lg bg-red-50 border border-red-200 p-4 text-red-800">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <!-- Stats Cards -->
     <div class="grid gap-4 md:grid-cols-4">
         <div class="rounded-lg border-2 border-gray-300 bg-white p-6 shadow-sm">
@@ -44,13 +56,33 @@
 
     <!-- Lead Requests Table -->
     <div class="rounded-lg border-2 border-gray-300 bg-white p-6 shadow-sm">
-        <flux:heading size="lg" class="mb-4">Recent Lead Requests</flux:heading>
+        <div class="flex items-center justify-between mb-4">
+            <flux:heading size="lg">Recent Lead Requests</flux:heading>
+            @if(count($selected) > 0)
+                <button 
+                    wire:click="bulkDelete"
+                    wire:confirm="Are you sure you want to delete {{ count($selected) }} selected lead request(s)? This action cannot be undone."
+                    class="px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 border-2 border-red-600"
+                    style="color: #ffffff !important;"
+                >
+                    Delete Selected ({{ count($selected) }})
+                </button>
+            @endif
+        </div>
         
         @if($leadRequests->count() > 0)
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
                         <tr class="border-b border-gray-200">
+                            <th class="px-4 py-3 text-left text-sm font-semibold">
+                                <input 
+                                    type="checkbox" 
+                                    wire:model="selectAll"
+                                    wire:click="toggleSelectAll"
+                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                />
+                            </th>
                             <th class="px-4 py-3 text-left text-sm font-semibold">Company</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold">Status</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold">Target Count</th>
@@ -62,7 +94,16 @@
                     </thead>
                     <tbody>
                         @foreach($leadRequests as $request)
-                            <tr class="border-b border-gray-200 hover:bg-blue-50 transition-colors">
+                            <tr class="border-b border-gray-200 hover:bg-blue-50 transition-colors {{ in_array($request->id, $selected) ? 'bg-blue-100' : '' }}">
+                                <td class="px-4 py-3">
+                                    <input 
+                                        type="checkbox" 
+                                        wire:model="selected"
+                                        value="{{ $request->id }}"
+                                        wire:click="toggleSelect({{ $request->id }})"
+                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                </td>
                                 <td class="px-4 py-3">
                                     <div class="font-medium">{{ $request->reference_company_name }}</div>
                                     @if($request->reference_company_url)
@@ -87,13 +128,22 @@
                                 <td class="px-4 py-3">{{ $request->contacts_found }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-600">{{ $request->created_at->diffForHumans() }}</td>
                                 <td class="px-4 py-3">
-                                    <a 
-                                        href="{{ route('leads.details', $request->id) }}" 
-                                        wire:navigate
-                                        class="px-4 py-1 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium"
-                                    >
-                                        View Details
-                                    </a>
+                                    <div class="flex gap-2">
+                                        <a 
+                                            href="{{ route('leads.details', $request->id) }}" 
+                                            wire:navigate
+                                            class="px-3 py-1 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium"
+                                        >
+                                            View
+                                        </a>
+                                        <button 
+                                            wire:click="delete({{ $request->id }})"
+                                            wire:confirm="Are you sure you want to delete this lead request? This action cannot be undone."
+                                            class="px-3 py-1 rounded-lg border border-red-300 bg-white text-red-700 hover:bg-red-50 text-sm font-medium"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach

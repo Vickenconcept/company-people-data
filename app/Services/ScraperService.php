@@ -34,6 +34,7 @@ class ScraperService
 
     /**
      * Scrape website content using ScraperAPI
+     * Automatically retries with premium mode for protected sites (Cloudflare, etc.)
      */
     public function scrapeWebsite(string $url): array
     {
@@ -42,17 +43,70 @@ class ScraperService
             'has_api_key' => !empty($this->apiKey),
         ]);
 
+        // Try standard scrape first
+        $result = $this->attemptScrape($url, false);
+        
+        // If it fails with 500 and mentions protected domains, try premium mode
+        if (!$result['success'] && 
+            $result['status'] === 500 && 
+            (str_contains($result['error'] ?? '', 'Protected domains') || 
+             str_contains($result['error'] ?? '', 'premium') ||
+             str_contains($result['error'] ?? '', 'Cloudflare'))) {
+            
+            Log::info('🔄 ScraperService: Protected domain detected, trying premium mode', [
+                'url' => $url,
+            ]);
+            
+            // Try with premium mode
+            $premiumResult = $this->attemptScrape($url, true);
+            
+            // If premium also fails, try ultra_premium
+            if (!$premiumResult['success'] && 
+                $premiumResult['status'] === 500) {
+                
+                Log::info('🔄 ScraperService: Premium mode failed, trying ultra_premium mode', [
+                    'url' => $url,
+                ]);
+                
+                return $this->attemptScrape($url, true, true);
+            }
+            
+            return $premiumResult;
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Attempt to scrape with optional premium/ultra_premium modes
+     */
+    protected function attemptScrape(string $url, bool $premium = false, bool $ultraPremium = false): array
+    {
         try {
-            $response = Http::timeout(30)->get('http://api.scraperapi.com', [
+            $params = [
                 'api_key' => $this->apiKey,
                 'url' => $url,
                 'render' => 'true', // Render JavaScript
-            ]);
+            ];
+            
+            if ($ultraPremium) {
+                $params['ultra_premium'] = 'true';
+                Log::info('🌐 ScraperService: Using ultra_premium mode', ['url' => $url]);
+            } elseif ($premium) {
+                $params['premium'] = 'true';
+                Log::info('🌐 ScraperService: Using premium mode', ['url' => $url]);
+            }
+            
+            // Increase timeout to 90 seconds for premium modes (they take longer)
+            $timeout = ($premium || $ultraPremium) ? 90 : 60;
+            
+            $response = Http::timeout($timeout)->get('http://api.scraperapi.com', $params);
 
             Log::info('🌐 ScraperService: API response received', [
                 'url' => $url,
                 'status' => $response->status(),
                 'response_size' => strlen($response->body()),
+                'premium_mode' => $premium || $ultraPremium,
             ]);
 
             if ($response->successful()) {
@@ -63,6 +117,7 @@ class ScraperService
                     'url' => $url,
                     'html_length' => strlen($html),
                     'content_length' => strlen($content),
+                    'premium_mode' => $premium || $ultraPremium,
                 ]);
 
                 return [
@@ -73,25 +128,32 @@ class ScraperService
                 ];
             }
 
+            $errorBody = $response->body();
             Log::error('❌ ScraperService: API Error', [
                 'url' => $url,
                 'status' => $response->status(),
-                'body' => substr($response->body(), 0, 500), // First 500 chars
+                'body' => substr($errorBody, 0, 500),
+                'premium_mode' => $premium || $ultraPremium,
             ]);
 
             return [
                 'success' => false,
-                'error' => 'Failed to scrape website: HTTP ' . $response->status(),
+                'status' => $response->status(),
+                'error' => 'Failed to scrape website: HTTP ' . $response->status() . ' - ' . substr($errorBody, 0, 200),
             ];
         } catch (\Exception $e) {
+            $isTimeout = str_contains($e->getMessage(), 'timed out') || str_contains($e->getMessage(), 'timeout');
+            
             Log::error('❌ ScraperService: Exception', [
                 'url' => $url,
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'is_timeout' => $isTimeout,
+                'premium_mode' => $premium || $ultraPremium,
             ]);
 
             return [
                 'success' => false,
+                'status' => $isTimeout ? 408 : 500,
                 'error' => $e->getMessage(),
             ];
         }

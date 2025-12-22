@@ -49,18 +49,37 @@ class ProcessLeadDiscovery implements ShouldQueue
             $scrapeResult = $scraperService->scrapeWebsite($url);
 
             if (!$scrapeResult['success']) {
+                // Check if it's a timeout error - try to continue with minimal content
+                $error = $scrapeResult['error'] ?? 'Unknown error';
+                $isTimeout = str_contains($error, 'timed out') || str_contains($error, 'timeout');
+                
                 Log::error('❌ Website scraping failed', [
                     'lead_request_id' => $this->leadRequest->id,
-                    'error' => $scrapeResult['error'] ?? 'Unknown error',
+                    'error' => $error,
+                    'is_timeout' => $isTimeout,
                 ]);
-                throw new \Exception('Failed to scrape website: ' . ($scrapeResult['error'] ?? 'Unknown error'));
+                
+                if ($isTimeout) {
+                    // For timeout errors, try to continue with company name only
+                    Log::warning('⚠️ Scraping timeout - continuing with company name only', [
+                        'lead_request_id' => $this->leadRequest->id,
+                        'company_name' => $this->leadRequest->reference_company_name,
+                    ]);
+                    
+                    // Use minimal content for AI analysis
+                    $websiteContent = "Company: {$this->leadRequest->reference_company_name}. Website: {$url}. Unable to scrape full content due to timeout.";
+                } else {
+                    throw new \Exception('Failed to scrape website: ' . $error);
+                }
+            } else {
+                $websiteContent = $scrapeResult['content'];
             }
-
-            $websiteContent = $scrapeResult['content'];
+            
             $contentLength = strlen($websiteContent);
-            Log::info('✅ Website scraped successfully', [
+            Log::info('✅ Website content ready for analysis', [
                 'lead_request_id' => $this->leadRequest->id,
                 'content_length' => $contentLength,
+                'is_fallback' => !$scrapeResult['success'] ?? false,
             ]);
 
             // Step 2: Analyze with AI and create ICP
@@ -96,7 +115,7 @@ class ProcessLeadDiscovery implements ShouldQueue
                 'lead_request_id' => $this->leadRequest->id,
             ]);
 
-            $criteriaResult = $openAIService->generateSearchCriteria($icpProfile);
+            $criteriaResult = $openAIService->generateSearchCriteria($icpProfile, $this->leadRequest->country);
 
             if (!$criteriaResult['success']) {
                 Log::error('❌ Search criteria generation failed', [
@@ -107,6 +126,14 @@ class ProcessLeadDiscovery implements ShouldQueue
             }
 
             $searchCriteria = $criteriaResult['criteria'];
+            
+            // Override country in search criteria if user provided one
+            if ($this->leadRequest->country) {
+                $searchCriteria['country'] = strtoupper($this->leadRequest->country);
+                if (empty($searchCriteria['countries']) || !is_array($searchCriteria['countries'])) {
+                    $searchCriteria['countries'] = [strtoupper($this->leadRequest->country)];
+                }
+            }
             Log::info('✅ Search criteria generated', [
                 'lead_request_id' => $this->leadRequest->id,
                 'criteria' => $searchCriteria,

@@ -20,15 +20,17 @@ return new class extends Migration
             $table->json('icp_profile')->nullable(); // Generated ICP from AI
             $table->json('search_criteria')->nullable(); // Industry, country, size, etc.
             $table->integer('target_count')->default(10);
+            $table->string('country', 2)->nullable();
             $table->json('target_job_titles')->nullable(); // ['CEO', 'CFO', etc.]
             $table->enum('status', ['pending', 'processing', 'completed', 'failed'])->default('pending');
             $table->text('error_message')->nullable();
-            $table->integer('companies_found')->default(0);
-            $table->integer('contacts_found')->default(0);
+            $table->integer('companies_found')->default(0); // Track how many companies found
+            $table->integer('contacts_found')->default(0); // Track how many contacts found
             $table->timestamps();
             
             $table->index('user_id');
             $table->index('status');
+            $table->index('country');
         });
     }
 

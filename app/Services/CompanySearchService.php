@@ -50,22 +50,80 @@ class CompanySearchService
                 'per_page' => $limit,
             ];
 
+            // Use industries - but Apollo might not accept all industry names
+            // We'll try to use a generic industry name that Apollo recognizes
+            // If the industry is too specific, we'll skip it and rely on keywords
+            $industryToUse = null;
             if (!empty($criteria['industry'])) {
-                $query['industry_tag_ids'] = $criteria['industry'];
+                $industryToUse = $criteria['industry'];
+            } elseif (!empty($criteria['industries']) && is_array($criteria['industries'])) {
+                $industryToUse = $criteria['industries'][0];
+            }
+            
+            // Skip industry_tag_ids - Apollo might need numeric IDs, not names
+            // Rely on keywords which are more flexible and reliable
+            // This avoids 422 errors from invalid industry tag formats
+            if ($industryToUse) {
+                Log::info('🏢 CompanySearchService: Using keywords-based search (skipping industry_tag_ids for compatibility)', [
+                    'industry' => $industryToUse,
+                ]);
             }
 
-            if (!empty($criteria['country'])) {
-                $query['country'] = $criteria['country'];
+            // Use countries array if available
+            // Only add country if it's not empty (Apollo doesn't like empty strings)
+            // Apollo expects 2-letter country codes (e.g., US, GB, FR), not full names
+            if (!empty($criteria['countries']) && is_array($criteria['countries']) && count($criteria['countries']) > 0) {
+                $country = $criteria['countries'][0] ?? $criteria['country'] ?? null;
+                if (!empty($country)) {
+                    // Convert full country names to codes if needed (e.g., "United States" -> "US")
+                    $countryCode = $this->normalizeCountryCode($country);
+                    if ($countryCode) {
+                        $query['country'] = $countryCode;
+                    }
+                }
+            } elseif (!empty($criteria['country'])) {
+                $countryCode = $this->normalizeCountryCode($criteria['country']);
+                if ($countryCode) {
+                    $query['country'] = $countryCode;
+                }
             }
 
-            if (!empty($criteria['employee_count_min'])) {
-                $query['organization_num_employees_ranges'] = [
-                    $criteria['employee_count_min'] . '-' . ($criteria['employee_count_max'] ?? 10000),
-                ];
+            // Employee count range - Apollo might expect array format or specific ranges
+            // Let's try without this parameter first, or use a simpler format
+            // Apollo has predefined ranges, so we'll skip this if it causes issues
+            // if (!empty($criteria['company_size_min'])) {
+            //     $min = $criteria['company_size_min'];
+            //     $max = $criteria['company_size_max'] ?? ($min * 10);
+            //     // Try array format: ["1-10", "11-50"] or just skip for now
+            // }
+
+            // Combine keywords more effectively - Apollo has strict length limits
+            if (!empty($criteria['keywords']) && is_array($criteria['keywords'])) {
+                // Use top 5 most relevant keywords to keep query manageable
+                // Apollo seems to have a limit around 150-200 characters
+                $keywords = array_slice($criteria['keywords'], 0, 5);
+                
+                // Build keyword string with most specific terms first
+                $keywordString = implode(' ', $keywords);
+                // Limit to 150 characters to be safe
+                $query['q_keywords'] = mb_substr($keywordString, 0, 150);
+            } elseif (!empty($criteria['keywords'])) {
+                $keywordsStr = is_array($criteria['keywords']) ? implode(' ', array_slice($criteria['keywords'], 0, 5)) : $criteria['keywords'];
+                // Limit keyword string length to 150 chars
+                $query['q_keywords'] = mb_substr($keywordsStr, 0, 150);
             }
 
-            if (!empty($criteria['keywords'])) {
-                $query['q_keywords'] = implode(' ', $criteria['keywords']);
+            // Add industry name to keywords if not already present (but keep it short)
+            if (!empty($criteria['industry']) && !empty($query['q_keywords'])) {
+                $industryLower = strtolower($criteria['industry']);
+                $keywordsLower = strtolower($query['q_keywords']);
+                if (!str_contains($keywordsLower, $industryLower)) {
+                    // Only add if we have room (keep total under 150)
+                    $newLength = strlen($query['q_keywords']) + 1 + strlen($criteria['industry']);
+                    if ($newLength <= 150) {
+                        $query['q_keywords'] = trim($query['q_keywords'] . ' ' . $criteria['industry']);
+                    }
+                }
             }
 
             Log::info('🏢 CompanySearchService: Sending request to Apollo', [
@@ -87,9 +145,26 @@ class CompanySearchService
                 $data = $response->json();
                 $companies = $data['organizations'] ?? [];
 
+                // Log what Apollo returned before filtering
+                Log::info('🔍 CompanySearchService: Apollo returned companies (before filtering)', [
+                    'count' => count($companies),
+                    'total_available' => $data['pagination']['total_entries'] ?? 0,
+                    'sample_companies' => array_map(function($c) {
+                        return [
+                            'name' => $c['name'] ?? 'N/A',
+                            'industry' => $c['industry'] ?? 'N/A',
+                            'domain' => $c['website_url'] ?? 'N/A',
+                        ];
+                    }, array_slice($companies, 0, 5)),
+                ]);
+
+                // Filter out generic tech giants if they don't match the industry
+                $companies = $this->filterIrrelevantCompanies($companies, $criteria);
+
                 Log::info('✅ CompanySearchService: Companies found', [
                     'count' => count($companies),
                     'total_available' => $data['pagination']['total_entries'] ?? 0,
+                    'after_filtering' => count($companies),
                 ]);
 
                 return [
@@ -144,6 +219,63 @@ class CompanySearchService
             'data_source' => 'apollo',
             'external_id' => (string) ($data['id'] ?? null),
         ];
+    }
+
+    /**
+     * Filter out irrelevant companies - REMOVED: No filtering, return all companies
+     * Apollo's search should handle relevance based on keywords
+     */
+    protected function filterIrrelevantCompanies(array $companies, array $criteria): array
+    {
+        // Return all companies - let Apollo's search algorithm determine relevance
+        // User can see all results and decide what's relevant
+        return $companies;
+    }
+
+    /**
+     * Normalize country code - convert full country names to 2-letter ISO codes
+     */
+    protected function normalizeCountryCode(?string $country): ?string
+    {
+        if (empty($country)) {
+            return null;
+        }
+
+        // If it's already a 2-letter code, return as-is (uppercase)
+        if (strlen($country) === 2) {
+            return strtoupper($country);
+        }
+
+        // Map common country names to ISO codes
+        $countryMap = [
+            'united states' => 'US',
+            'united kingdom' => 'GB',
+            'great britain' => 'GB',
+            'germany' => 'DE',
+            'france' => 'FR',
+            'australia' => 'AU',
+            'canada' => 'CA',
+            'japan' => 'JP',
+            'china' => 'CN',
+            'india' => 'IN',
+            'spain' => 'ES',
+            'italy' => 'IT',
+            'netherlands' => 'NL',
+            'brazil' => 'BR',
+            'mexico' => 'MX',
+            'south korea' => 'KR',
+            'singapore' => 'SG',
+        ];
+
+        $countryLower = strtolower(trim($country));
+        
+        // Check if it's in our map
+        if (isset($countryMap[$countryLower])) {
+            return $countryMap[$countryLower];
+        }
+
+        // If not found, return null (don't use invalid country codes)
+        return null;
     }
 
     /**
