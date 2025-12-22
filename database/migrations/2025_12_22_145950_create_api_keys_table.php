@@ -1,0 +1,41 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('api_keys', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->enum('service', [
+                'openai',
+                'scraperapi',
+                'apollo',
+                'hunter'
+            ]);
+            $table->string('api_key');
+            $table->boolean('is_active')->default(true);
+            $table->json('metadata')->nullable(); // Additional config
+            $table->timestamps();
+            
+            $table->index('user_id');
+            $table->index('service');
+            $table->unique(['user_id', 'service']);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('api_keys');
+    }
+};

@@ -1,0 +1,203 @@
+<?php
+
+namespace App\Jobs;
+
+use App\Models\LeadRequest;
+use App\Services\CompanySearchService;
+use App\Services\OpenAIService;
+use App\Services\ScraperService;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Log;
+
+class ProcessLeadDiscovery implements ShouldQueue
+{
+    use Queueable;
+
+    /**
+     * Create a new job instance.
+     */
+    public function __construct(
+        public LeadRequest $leadRequest
+    ) {
+    }
+
+    /**
+     * Execute the job.
+     */
+    public function handle(): void
+    {
+        Log::info('🚀 ProcessLeadDiscovery Started', [
+            'lead_request_id' => $this->leadRequest->id,
+            'company_name' => $this->leadRequest->reference_company_name,
+            'target_count' => $this->leadRequest->target_count,
+        ]);
+
+        $this->leadRequest->update(['status' => 'processing']);
+
+        try {
+            // Step 1: Scrape reference company website
+            $url = $this->leadRequest->reference_company_url ?? "https://{$this->leadRequest->reference_company_name}";
+            Log::info('📥 Step 1: Scraping website', [
+                'lead_request_id' => $this->leadRequest->id,
+                'url' => $url,
+            ]);
+
+            $scraperService = new ScraperService();
+            $scraperService->setApiKeyFromUser($this->leadRequest->user);
+
+            $scrapeResult = $scraperService->scrapeWebsite($url);
+
+            if (!$scrapeResult['success']) {
+                Log::error('❌ Website scraping failed', [
+                    'lead_request_id' => $this->leadRequest->id,
+                    'error' => $scrapeResult['error'] ?? 'Unknown error',
+                ]);
+                throw new \Exception('Failed to scrape website: ' . ($scrapeResult['error'] ?? 'Unknown error'));
+            }
+
+            $websiteContent = $scrapeResult['content'];
+            $contentLength = strlen($websiteContent);
+            Log::info('✅ Website scraped successfully', [
+                'lead_request_id' => $this->leadRequest->id,
+                'content_length' => $contentLength,
+            ]);
+
+            // Step 2: Analyze with AI and create ICP
+            Log::info('🤖 Step 2: Analyzing company with AI', [
+                'lead_request_id' => $this->leadRequest->id,
+            ]);
+
+            $openAIService = new OpenAIService();
+            $openAIService->setApiKeyFromUser($this->leadRequest->user);
+
+            $icpResult = $openAIService->analyzeCompanyAndCreateICP(
+                $websiteContent,
+                $this->leadRequest->reference_company_name,
+                $this->leadRequest->reference_company_url
+            );
+
+            if (!$icpResult['success']) {
+                Log::error('❌ AI analysis failed', [
+                    'lead_request_id' => $this->leadRequest->id,
+                    'error' => $icpResult['error'] ?? 'Unknown error',
+                ]);
+                throw new \Exception('Failed to create ICP: ' . ($icpResult['error'] ?? 'Unknown error'));
+            }
+
+            $icpProfile = $icpResult['icp'];
+            Log::info('✅ ICP Profile created', [
+                'lead_request_id' => $this->leadRequest->id,
+                'industry' => $icpProfile['industry'] ?? 'N/A',
+            ]);
+
+            // Step 3: Generate search criteria
+            Log::info('🔍 Step 3: Generating search criteria', [
+                'lead_request_id' => $this->leadRequest->id,
+            ]);
+
+            $criteriaResult = $openAIService->generateSearchCriteria($icpProfile);
+
+            if (!$criteriaResult['success']) {
+                Log::error('❌ Search criteria generation failed', [
+                    'lead_request_id' => $this->leadRequest->id,
+                    'error' => $criteriaResult['error'] ?? 'Unknown error',
+                ]);
+                throw new \Exception('Failed to generate search criteria: ' . ($criteriaResult['error'] ?? 'Unknown error'));
+            }
+
+            $searchCriteria = $criteriaResult['criteria'];
+            Log::info('✅ Search criteria generated', [
+                'lead_request_id' => $this->leadRequest->id,
+                'criteria' => $searchCriteria,
+            ]);
+
+            // Update lead request with ICP and criteria
+            $this->leadRequest->update([
+                'reference_company_content' => $websiteContent,
+                'icp_profile' => $icpProfile,
+                'search_criteria' => $searchCriteria,
+            ]);
+
+            // Step 4: Search for similar companies
+            Log::info('🏢 Step 4: Searching for similar companies', [
+                'lead_request_id' => $this->leadRequest->id,
+                'target_count' => $this->leadRequest->target_count,
+            ]);
+
+            $companySearchService = new CompanySearchService();
+            $companySearchService->setApiKeyFromUser($this->leadRequest->user);
+
+            $companiesResult = $companySearchService->searchCompanies(
+                $searchCriteria,
+                $this->leadRequest->target_count
+            );
+
+            if (!$companiesResult['success']) {
+                Log::error('❌ Company search failed', [
+                    'lead_request_id' => $this->leadRequest->id,
+                    'error' => $companiesResult['error'] ?? 'Unknown error',
+                ]);
+                throw new \Exception('Failed to search companies: ' . ($companiesResult['error'] ?? 'Unknown error'));
+            }
+
+            $companiesFound = count($companiesResult['companies']);
+            Log::info('✅ Companies found', [
+                'lead_request_id' => $this->leadRequest->id,
+                'count' => $companiesFound,
+            ]);
+
+            // Step 5: Store companies
+            Log::info('💾 Step 5: Storing companies in database', [
+                'lead_request_id' => $this->leadRequest->id,
+            ]);
+
+            $companies = $companySearchService->storeCompanies($companiesResult['companies']);
+
+            $this->leadRequest->update([
+                'companies_found' => count($companies),
+            ]);
+
+            Log::info('✅ Companies stored', [
+                'lead_request_id' => $this->leadRequest->id,
+                'stored_count' => count($companies),
+            ]);
+
+            // Step 6: Queue person lookup for each company
+            Log::info('👥 Step 6: Queueing person lookup jobs', [
+                'lead_request_id' => $this->leadRequest->id,
+                'companies_count' => count($companies),
+                'job_titles' => $this->leadRequest->target_job_titles,
+            ]);
+
+            foreach ($companies as $company) {
+                ProcessPersonLookup::dispatch($this->leadRequest, $company);
+                Log::info('📤 Queued person lookup', [
+                    'lead_request_id' => $this->leadRequest->id,
+                    'company_id' => $company->id,
+                    'company_name' => $company->name,
+                ]);
+            }
+
+            // Update status
+            $this->leadRequest->update(['status' => 'completed']);
+
+            Log::info('🎉 ProcessLeadDiscovery Completed Successfully', [
+                'lead_request_id' => $this->leadRequest->id,
+                'companies_found' => count($companies),
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('❌ ProcessLeadDiscovery Failed', [
+                'lead_request_id' => $this->leadRequest->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            $this->leadRequest->update([
+                'status' => 'failed',
+                'error_message' => $e->getMessage(),
+            ]);
+        }
+    }
+}
