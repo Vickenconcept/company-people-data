@@ -104,7 +104,7 @@ class ProcessPersonLookup implements ShouldQueue
                 'stored_count' => count($people),
             ]);
 
-            // Create lead results
+            // Create lead results (user will manually control email sending)
             Log::info('📝 Creating lead results', [
                 'lead_request_id' => $this->leadRequest->id,
                 'company_id' => $this->company->id,
@@ -125,6 +125,7 @@ class ProcessPersonLookup implements ShouldQueue
                     'person_id' => $person->id,
                     'person_name' => $person->full_name,
                     'person_title' => $person->title,
+                    'has_email' => !empty($person->email),
                 ]);
             }
 

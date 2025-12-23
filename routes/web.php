@@ -16,6 +16,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('leads')->name('leads.')->group(function () {
         Route::get('/', \App\Livewire\Leads\Dashboard::class)->name('dashboard');
         Route::get('/create', \App\Livewire\Leads\CreateLead::class)->name('create');
+        Route::get('/export', [\App\Http\Controllers\ExportController::class, 'exportLeads'])->name('export');
+        Route::get('/email-templates', \App\Livewire\Leads\EmailTemplates::class)->name('email-templates');
+        Route::get('/import', \App\Livewire\Leads\ImportLeads::class)->name('import');
         Route::get('/{id}', \App\Livewire\Leads\LeadDetails::class)->name('details');
     });
     

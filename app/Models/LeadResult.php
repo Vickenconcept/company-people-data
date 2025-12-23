@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class LeadResult extends Model
@@ -14,6 +15,7 @@ class LeadResult extends Model
         'person_id',
         'similarity_score',
         'status',
+        'notes',
     ];
 
     protected $casts = [
@@ -38,5 +40,15 @@ class LeadResult extends Model
     public function queuedEmails(): HasMany
     {
         return $this->hasMany(QueuedEmail::class);
+    }
+
+    public function generatedEmail(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(GeneratedEmail::class);
+    }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class, 'lead_result_tag');
     }
 }

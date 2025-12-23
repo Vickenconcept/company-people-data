@@ -47,6 +47,16 @@ class User extends Authenticatable
         ];
     }
 
+    public function emailTemplates(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(EmailTemplate::class);
+    }
+
+    public function tags(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Tag::class);
+    }
+
     /**
      * Get the user's initials
      */

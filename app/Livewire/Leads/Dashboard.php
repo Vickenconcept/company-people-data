@@ -14,6 +14,10 @@ class Dashboard extends Component
 
     public array $selected = [];
     public bool $selectAll = false;
+    public string $search = '';
+    public ?string $statusFilter = null;
+    public ?string $dateFrom = null;
+    public ?string $dateTo = null;
 
     public function toggleSelectAll()
     {
@@ -74,10 +78,61 @@ class Dashboard extends Component
         $this->selectAll = false;
     }
 
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingStatusFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingDateFrom()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingDateTo()
+    {
+        $this->resetPage();
+    }
+
+    public function clearFilters()
+    {
+        $this->search = '';
+        $this->statusFilter = null;
+        $this->dateFrom = null;
+        $this->dateTo = null;
+        $this->resetPage();
+    }
+
     public function render()
     {
-        $leadRequests = LeadRequest::where('user_id', auth()->id())
-            ->withCount('leadResults')
+        $query = LeadRequest::where('user_id', auth()->id());
+
+        // Apply search filter
+        if (!empty($this->search)) {
+            $query->where(function ($q) {
+                $q->where('reference_company_name', 'like', '%' . $this->search . '%')
+                  ->orWhere('reference_company_url', 'like', '%' . $this->search . '%');
+            });
+        }
+
+        // Apply status filter
+        if (!empty($this->statusFilter)) {
+            $query->where('status', $this->statusFilter);
+        }
+
+        // Apply date filters
+        if (!empty($this->dateFrom)) {
+            $query->whereDate('created_at', '>=', $this->dateFrom);
+        }
+        if (!empty($this->dateTo)) {
+            $query->whereDate('created_at', '<=', $this->dateTo);
+        }
+
+        $leadRequests = $query->withCount('leadResults')
             ->latest()
             ->paginate(10);
 
@@ -90,12 +145,48 @@ class Dashboard extends Component
             $this->selectAll = false;
         }
 
+        // Enhanced stats with analytics
+        $baseQuery = LeadRequest::where('user_id', auth()->id());
+        
+        // Total leads and contacts found
+        $totalLeads = $baseQuery->count();
+        $totalCompanies = $baseQuery->sum('companies_found');
+        $totalContacts = $baseQuery->sum('contacts_found');
+        
+        // Status breakdown
         $stats = [
-            'total' => LeadRequest::where('user_id', auth()->id())->count(),
-            'completed' => LeadRequest::where('user_id', auth()->id())->where('status', 'completed')->count(),
-            'processing' => LeadRequest::where('user_id', auth()->id())->where('status', 'processing')->count(),
-            'pending' => LeadRequest::where('user_id', auth()->id())->where('status', 'pending')->count(),
+            'total' => $totalLeads,
+            'completed' => $baseQuery->clone()->where('status', 'completed')->count(),
+            'processing' => $baseQuery->clone()->where('status', 'processing')->count(),
+            'pending' => $baseQuery->clone()->where('status', 'pending')->count(),
+            'failed' => $baseQuery->clone()->where('status', 'failed')->count(),
+            'total_companies' => $totalCompanies,
+            'total_contacts' => $totalContacts,
         ];
+
+        // Conversion analytics (from lead results)
+        $leadResultsQuery = \App\Models\LeadResult::whereHas('leadRequest', function ($q) {
+            $q->where('user_id', auth()->id());
+        });
+        
+        $stats['conversion'] = [
+            'total' => $leadResultsQuery->count(),
+            'pending' => $leadResultsQuery->clone()->where('status', 'pending')->count(),
+            'contacted' => $leadResultsQuery->clone()->where('status', 'contacted')->count(),
+            'responded' => $leadResultsQuery->clone()->where('status', 'responded')->count(),
+            'converted' => $leadResultsQuery->clone()->where('status', 'converted')->count(),
+            'rejected' => $leadResultsQuery->clone()->where('status', 'rejected')->count(),
+        ];
+
+        // Calculate conversion rate
+        if ($stats['conversion']['contacted'] > 0) {
+            $stats['conversion_rate'] = round(
+                ($stats['conversion']['converted'] / $stats['conversion']['contacted']) * 100,
+                2
+            );
+        } else {
+            $stats['conversion_rate'] = 0;
+        }
 
         return view('livewire.leads.dashboard', [
             'leadRequests' => $leadRequests,

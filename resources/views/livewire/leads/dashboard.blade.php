@@ -4,14 +4,32 @@
             <flux:heading>Lead Generation Dashboard</flux:heading>
             <flux:subheading>Manage your lead generation requests and track results</flux:subheading>
         </div>
-        <a 
-            href="{{ route('leads.create') }}" 
-            wire:navigate
-            class="px-6 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 border-2 border-blue-600 inline-block"
-            style="color: #ffffff !important;"
-        >
-            Create New Lead Request
-        </a>
+        <div class="flex gap-2">
+            <a 
+                href="{{ route('leads.import') }}" 
+                wire:navigate
+                class="px-4 py-2 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 border-2 border-green-600 inline-block"
+                style="color: #ffffff !important;"
+            >
+                Import Leads
+            </a>
+            <a 
+                href="{{ route('leads.email-templates') }}" 
+                wire:navigate
+                class="px-4 py-2 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 border-2 border-purple-600 inline-block"
+                style="color: #ffffff !important;"
+            >
+                Email Templates
+            </a>
+            <a 
+                href="{{ route('leads.create') }}" 
+                wire:navigate
+                class="px-6 py-2 rounded-lg bg-orange-500 text-white font-semibold hover:bg-orange-600 border-2 border-orange-500 inline-block"
+                style="color: #ffffff !important;"
+            >
+                Create New Lead Request
+            </a>
+        </div>
     </div>
 
     @if(session()->has('message'))
@@ -27,7 +45,7 @@
     @endif
 
     <!-- Stats Cards -->
-    <div class="grid gap-4 md:grid-cols-4">
+    <div class="grid gap-4 md:grid-cols-4 lg:grid-cols-6">
         <div class="rounded-lg border-2 border-gray-300 bg-white p-6 shadow-sm">
             <div class="space-y-1">
                 <div class="text-sm font-medium text-gray-600">Total Requests</div>
@@ -48,26 +66,124 @@
         </div>
         <div class="rounded-lg border-2 border-gray-300 bg-white p-6 shadow-sm">
             <div class="space-y-1">
-                <div class="text-sm font-medium text-gray-600">Pending</div>
-                <div class="text-2xl font-bold text-yellow-700">{{ $stats['pending'] }}</div>
+                <div class="text-sm font-medium text-gray-600">Companies Found</div>
+                <div class="text-2xl font-bold text-purple-700">{{ $stats['total_companies'] }}</div>
             </div>
+        </div>
+        <div class="rounded-lg border-2 border-gray-300 bg-white p-6 shadow-sm">
+            <div class="space-y-1">
+                <div class="text-sm font-medium text-gray-600">Contacts Found</div>
+                <div class="text-2xl font-bold text-indigo-700">{{ $stats['total_contacts'] }}</div>
+            </div>
+        </div>
+        <div class="rounded-lg border-2 border-gray-300 bg-white p-6 shadow-sm">
+            <div class="space-y-1">
+                <div class="text-sm font-medium text-gray-600">Conversion Rate</div>
+                <div class="text-2xl font-bold text-orange-500">{{ $stats['conversion_rate'] ?? 0 }}%</div>
+                <div class="text-xs text-gray-500">{{ $stats['conversion']['converted'] ?? 0 }} / {{ $stats['conversion']['contacted'] ?? 0 }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conversion Analytics -->
+    <div class="grid gap-4 md:grid-cols-5">
+        <div class="rounded-lg border-2 border-gray-300 bg-white p-4 shadow-sm">
+            <div class="text-xs font-medium text-gray-600">Total Leads</div>
+            <div class="text-xl font-bold text-gray-900">{{ $stats['conversion']['total'] ?? 0 }}</div>
+        </div>
+        <div class="rounded-lg border-2 border-gray-300 bg-white p-4 shadow-sm">
+            <div class="text-xs font-medium text-gray-600">Contacted</div>
+            <div class="text-xl font-bold text-blue-700">{{ $stats['conversion']['contacted'] ?? 0 }}</div>
+        </div>
+        <div class="rounded-lg border-2 border-gray-300 bg-white p-4 shadow-sm">
+            <div class="text-xs font-medium text-gray-600">Responded</div>
+            <div class="text-xl font-bold text-green-700">{{ $stats['conversion']['responded'] ?? 0 }}</div>
+        </div>
+        <div class="rounded-lg border-2 border-gray-300 bg-white p-4 shadow-sm">
+            <div class="text-xs font-medium text-gray-600">Converted</div>
+            <div class="text-xl font-bold text-purple-700">{{ $stats['conversion']['converted'] ?? 0 }}</div>
+        </div>
+        <div class="rounded-lg border-2 border-gray-300 bg-white p-4 shadow-sm">
+            <div class="text-xs font-medium text-gray-600">Rejected</div>
+            <div class="text-xl font-bold text-red-700">{{ $stats['conversion']['rejected'] ?? 0 }}</div>
         </div>
     </div>
 
     <!-- Lead Requests Table -->
     <div class="rounded-lg border-2 border-gray-300 bg-white p-6 shadow-sm">
         <div class="flex items-center justify-between mb-4">
-            <flux:heading size="lg">Recent Lead Requests</flux:heading>
-            @if(count($selected) > 0)
-                <button 
-                    wire:click="bulkDelete"
-                    wire:confirm="Are you sure you want to delete {{ count($selected) }} selected lead request(s)? This action cannot be undone."
-                    class="px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 border-2 border-red-600"
+            <flux:heading size="lg">Lead Requests</flux:heading>
+            <div class="flex gap-2">
+                @if(count($selected) > 0)
+                    <button 
+                        wire:click="bulkDelete"
+                        wire:confirm="Are you sure you want to delete {{ count($selected) }} selected lead request(s)? This action cannot be undone."
+                        class="px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 border-2 border-red-600"
+                        style="color: #ffffff !important;"
+                    >
+                        Delete Selected ({{ count($selected) }})
+                    </button>
+                @endif
+                <a 
+                    href="{{ route('leads.export') }}" 
+                    class="px-4 py-2 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 border-2 border-green-600"
                     style="color: #ffffff !important;"
                 >
-                    Delete Selected ({{ count($selected) }})
-                </button>
-            @endif
+                    Export CSV
+                </a>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="mb-4 grid gap-4 md:grid-cols-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                <input 
+                    type="text"
+                    wire:model.live.debounce.300ms="search"
+                    placeholder="Company name or URL..."
+                    class="w-full rounded-lg border-2 border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                >
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select 
+                    wire:model.live="statusFilter"
+                    class="w-full rounded-lg border-2 border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                >
+                    <option value="">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="completed">Completed</option>
+                    <option value="failed">Failed</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+                <input 
+                    type="date"
+                    wire:model.live="dateFrom"
+                    class="w-full rounded-lg border-2 border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                >
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+                <div class="flex gap-2">
+                    <input 
+                        type="date"
+                        wire:model.live="dateTo"
+                        class="flex-1 rounded-lg border-2 border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                    >
+                    @if($search || $statusFilter || $dateFrom || $dateTo)
+                        <button 
+                            wire:click="clearFilters"
+                            class="px-3 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium"
+                        >
+                            Clear
+                        </button>
+                    @endif
+                </div>
+            </div>
         </div>
         
         @if($leadRequests->count() > 0)

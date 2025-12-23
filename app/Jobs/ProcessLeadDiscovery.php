@@ -155,17 +155,41 @@ class ProcessLeadDiscovery implements ShouldQueue
             $companySearchService = new CompanySearchService();
             $companySearchService->setApiKeyFromUser($this->leadRequest->user);
 
+            // Extract domain from reference company URL for lookalike search
+            $referenceDomain = null;
+            if ($this->leadRequest->reference_company_url) {
+                $referenceDomain = parse_url($this->leadRequest->reference_company_url, PHP_URL_HOST);
+            } elseif ($this->leadRequest->reference_company_name) {
+                // Try to construct domain from company name
+                $referenceDomain = strtolower(str_replace(' ', '', $this->leadRequest->reference_company_name)) . '.com';
+            }
+
             $companiesResult = $companySearchService->searchCompanies(
                 $searchCriteria,
-                $this->leadRequest->target_count
+                $this->leadRequest->target_count,
+                $referenceDomain
             );
 
             if (!$companiesResult['success']) {
+                $error = $companiesResult['error'] ?? 'Unknown error';
+                
                 Log::error('❌ Company search failed', [
                     'lead_request_id' => $this->leadRequest->id,
-                    'error' => $companiesResult['error'] ?? 'Unknown error',
+                    'error' => $error,
+                    'apollo_free_plan_limited' => $companiesResult['apollo_free_plan_limited'] ?? false,
                 ]);
-                throw new \Exception('Failed to search companies: ' . ($companiesResult['error'] ?? 'Unknown error'));
+                
+                // If Apollo free plan is limited, provide a helpful error message
+                if (!empty($companiesResult['apollo_free_plan_limited'])) {
+                    throw new \Exception(
+                        'Apollo free plan limitation: ' . $error . 
+                        ' The system detected that Apollo is returning irrelevant results (Google, Amazon, LinkedIn) regardless of your search criteria. ' .
+                        'This is a known limitation of Apollo\'s free plan. ' .
+                        'To find similar companies, please upgrade to Apollo\'s paid plan, or the system will use Hunter.io for people/contact search only.'
+                    );
+                }
+                
+                throw new \Exception('Failed to search companies: ' . $error);
             }
 
             $companiesFound = count($companiesResult['companies']);
