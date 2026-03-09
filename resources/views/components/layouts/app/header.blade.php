@@ -62,7 +62,7 @@
                             <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
                                 <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
                                     <span
-                                        class="flex h-full w-full items-center justify-center rounded-lg bg-blue-100 text-blue-800 font-semibold"
+                                        class="flex h-full w-full items-center justify-center rounded-lg bg-orange-100 text-orange-700 font-semibold"
                                     >
                                         {{ auth()->user()->initials() }}
                                     </span>

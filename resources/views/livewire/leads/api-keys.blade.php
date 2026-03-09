@@ -19,7 +19,7 @@
         <form wire:submit="save" class="space-y-4">
             <div>
                 <flux:text class="mb-2 block font-medium">Service *</flux:text>
-                <select wire:model="selected_service" class="w-full rounded-lg border-2 border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none bg-white text-gray-900 font-medium">
+                <select wire:model="selected_service" class="w-full rounded-lg border-2 border-gray-300 px-3 py-2 focus:border-orange-500 focus:outline-none bg-white text-gray-900 font-medium">
                     @foreach($services as $key => $name)
                         <option value="{{ $key }}">{{ $name }}</option>
                     @endforeach
@@ -34,7 +34,7 @@
                     type="password" 
                     placeholder="Enter your API key" 
                     required
-                    class="w-full rounded-lg border-2 border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none text-gray-900"
+                    class="w-full rounded-lg border-2 border-gray-300 px-3 py-2 focus:border-orange-500 focus:outline-none text-gray-900"
                 />
             @error('api_key') <flux:text class="text-red-600">{{ $message }}</flux:text> @enderror
             <flux:text class="text-sm text-gray-500">Your API key will be securely stored</flux:text>
@@ -45,7 +45,7 @@
             <div class="flex gap-4">
                 <button 
                     type="submit"
-                    class="px-6 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 border-2 border-blue-600"
+                    class="px-6 py-2 rounded-lg bg-orange-500 text-white font-semibold hover:bg-orange-600 border-2 border-orange-500"
                     style="color: #ffffff !important;"
                 >
                     {{ $editing_id ? 'Update' : 'Save' }} API Key
@@ -80,7 +80,7 @@
                     </thead>
                     <tbody>
                         @foreach($apiKeys as $apiKey)
-                            <tr class="border-b border-gray-200 hover:bg-blue-50 transition-colors">
+                            <tr class="border-b border-gray-200 hover:bg-orange-50 transition-colors">
                                 <td class="px-4 py-3">
                                     <div class="font-medium">{{ $services[$apiKey->service] ?? $apiKey->service }}</div>
                                 </td>

@@ -15,6 +15,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Lead Generation Routes
     Route::prefix('leads')->name('leads.')->group(function () {
         Route::get('/', \App\Livewire\Leads\Dashboard::class)->name('dashboard');
+        Route::get('/all', \App\Livewire\Leads\AllLeads::class)->name('all');
         Route::get('/create', \App\Livewire\Leads\CreateLead::class)->name('create');
         Route::get('/export', [\App\Http\Controllers\ExportController::class, 'exportLeads'])->name('export');
         Route::get('/email-templates', \App\Livewire\Leads\EmailTemplates::class)->name('email-templates');
@@ -31,7 +32,6 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('settings/profile', Profile::class)->name('settings.profile');
     Route::get('settings/password', Password::class)->name('settings.password');
-    Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
 });
 
 require __DIR__.'/auth.php';

@@ -38,10 +38,6 @@ class ProcessLeadDiscovery implements ShouldQueue
         try {
             // Step 1: Scrape reference company website
             $url = $this->leadRequest->reference_company_url ?? "https://{$this->leadRequest->reference_company_name}";
-            Log::info('📥 Step 1: Scraping website', [
-                'lead_request_id' => $this->leadRequest->id,
-                'url' => $url,
-            ]);
 
             $scraperService = new ScraperService();
             $scraperService->setApiKeyFromUser($this->leadRequest->user);
@@ -74,19 +70,8 @@ class ProcessLeadDiscovery implements ShouldQueue
             } else {
                 $websiteContent = $scrapeResult['content'];
             }
-            
-            $contentLength = strlen($websiteContent);
-            Log::info('✅ Website content ready for analysis', [
-                'lead_request_id' => $this->leadRequest->id,
-                'content_length' => $contentLength,
-                'is_fallback' => !$scrapeResult['success'] ?? false,
-            ]);
 
             // Step 2: Analyze with AI and create ICP
-            Log::info('🤖 Step 2: Analyzing company with AI', [
-                'lead_request_id' => $this->leadRequest->id,
-            ]);
-
             $openAIService = new OpenAIService();
             $openAIService->setApiKeyFromUser($this->leadRequest->user);
 
@@ -105,15 +90,6 @@ class ProcessLeadDiscovery implements ShouldQueue
             }
 
             $icpProfile = $icpResult['icp'];
-            Log::info('✅ ICP Profile created', [
-                'lead_request_id' => $this->leadRequest->id,
-                'industry' => $icpProfile['industry'] ?? 'N/A',
-            ]);
-
-            // Step 3: Generate search criteria
-            Log::info('🔍 Step 3: Generating search criteria', [
-                'lead_request_id' => $this->leadRequest->id,
-            ]);
 
             $criteriaResult = $openAIService->generateSearchCriteria($icpProfile, $this->leadRequest->country);
 
@@ -134,22 +110,11 @@ class ProcessLeadDiscovery implements ShouldQueue
                     $searchCriteria['countries'] = [strtoupper($this->leadRequest->country)];
                 }
             }
-            Log::info('✅ Search criteria generated', [
-                'lead_request_id' => $this->leadRequest->id,
-                'criteria' => $searchCriteria,
-            ]);
-
             // Update lead request with ICP and criteria
             $this->leadRequest->update([
                 'reference_company_content' => $websiteContent,
                 'icp_profile' => $icpProfile,
                 'search_criteria' => $searchCriteria,
-            ]);
-
-            // Step 4: Search for similar companies
-            Log::info('🏢 Step 4: Searching for similar companies', [
-                'lead_request_id' => $this->leadRequest->id,
-                'target_count' => $this->leadRequest->target_count,
             ]);
 
             $companySearchService = new CompanySearchService();
@@ -192,42 +157,14 @@ class ProcessLeadDiscovery implements ShouldQueue
                 throw new \Exception('Failed to search companies: ' . $error);
             }
 
-            $companiesFound = count($companiesResult['companies']);
-            Log::info('✅ Companies found', [
-                'lead_request_id' => $this->leadRequest->id,
-                'count' => $companiesFound,
-            ]);
-
-            // Step 5: Store companies
-            Log::info('💾 Step 5: Storing companies in database', [
-                'lead_request_id' => $this->leadRequest->id,
-            ]);
-
             $companies = $companySearchService->storeCompanies($companiesResult['companies']);
 
             $this->leadRequest->update([
                 'companies_found' => count($companies),
             ]);
 
-            Log::info('✅ Companies stored', [
-                'lead_request_id' => $this->leadRequest->id,
-                'stored_count' => count($companies),
-            ]);
-
-            // Step 6: Queue person lookup for each company
-            Log::info('👥 Step 6: Queueing person lookup jobs', [
-                'lead_request_id' => $this->leadRequest->id,
-                'companies_count' => count($companies),
-                'job_titles' => $this->leadRequest->target_job_titles,
-            ]);
-
             foreach ($companies as $company) {
                 ProcessPersonLookup::dispatch($this->leadRequest, $company);
-                Log::info('📤 Queued person lookup', [
-                    'lead_request_id' => $this->leadRequest->id,
-                    'company_id' => $company->id,
-                    'company_name' => $company->name,
-                ]);
             }
 
             // Update status

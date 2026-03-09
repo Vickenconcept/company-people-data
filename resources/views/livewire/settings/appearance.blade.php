@@ -1,11 +1,9 @@
 <section class="w-full">
     @include('partials.settings-heading')
 
-    <x-settings.layout :heading="__('Appearance')" :subheading=" __('Update the appearance settings for your account')">
-        <flux:radio.group x-data variant="segmented" x-model="$flux.appearance">
-            <flux:radio value="light" icon="sun">{{ __('Light') }}</flux:radio>
-            <flux:radio value="dark" icon="moon">{{ __('Dark') }}</flux:radio>
-            <flux:radio value="system" icon="computer-desktop">{{ __('System') }}</flux:radio>
-        </flux:radio.group>
+    <x-settings.layout :heading="__('Appearance')" :subheading=" __('The app now uses a single light theme for maximum clarity.')">
+        <p class="text-sm text-slate-500">
+            {{ __('Theme switching has been disabled. All users see the same light interface.') }}
+        </p>
     </x-settings.layout>
 </section>

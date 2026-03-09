@@ -38,21 +38,9 @@ class OpenAIService
      */
     public function analyzeCompanyAndCreateICP(string $websiteContent, string $companyName, ?string $websiteUrl = null): array
     {
-        Log::info('🤖 OpenAIService: Starting ICP analysis', [
-            'company_name' => $companyName,
-            'website_url' => $websiteUrl,
-            'content_length' => strlen($websiteContent),
-            'has_api_key' => !empty($this->apiKey),
-        ]);
-
         $prompt = $this->getICPAnalysisPrompt($websiteContent, $companyName, $websiteUrl);
 
         try {
-            Log::info('🤖 OpenAIService: Sending request to OpenAI', [
-                'model' => 'gpt-4o-mini',
-                'prompt_length' => strlen($prompt),
-            ]);
-
             $response = Http::timeout(60)->withHeaders([
                 'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
@@ -72,18 +60,9 @@ class OpenAIService
                 'response_format' => ['type' => 'json_object'],
             ]);
 
-            Log::info('🤖 OpenAIService: Received response from OpenAI', [
-                'status' => $response->status(),
-            ]);
-
             if ($response->successful()) {
                 $content = $response->json('choices.0.message.content');
                 $icp = json_decode($content, true);
-
-                Log::info('✅ OpenAIService: ICP analysis completed', [
-                    'company_name' => $companyName,
-                    'industry' => $icp['industry'] ?? 'N/A',
-                ]);
 
                 return [
                     'success' => true,
@@ -119,10 +98,6 @@ class OpenAIService
      */
     public function generateSearchCriteria(array $icpProfile, ?string $country = null): array
     {
-        Log::info('🔍 OpenAIService: Generating search criteria', [
-            'industry' => $icpProfile['industry'] ?? 'N/A',
-        ]);
-
         $prompt = $this->getSearchCriteriaPrompt($icpProfile, $country);
 
         try {
@@ -148,10 +123,6 @@ class OpenAIService
             if ($response->successful()) {
                 $content = $response->json('choices.0.message.content');
                 $criteria = json_decode($content, true);
-
-                Log::info('✅ OpenAIService: Search criteria generated', [
-                    'criteria' => $criteria,
-                ]);
 
                 return [
                     'success' => true,

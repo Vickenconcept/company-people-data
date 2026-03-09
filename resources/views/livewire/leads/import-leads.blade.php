@@ -15,7 +15,7 @@
 
     <div class="rounded-lg border-2 border-gray-300 bg-white p-6 shadow-sm">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">CSV Format Requirements</h3>
-        <div class="mb-6 space-y-2 text-sm text-gray-700">
+        <div class="mb-6 space-y-3 text-sm text-gray-700">
             <p>Your CSV file should contain the following columns (at minimum):</p>
             <ul class="list-disc list-inside ml-4 space-y-1">
                 <li><strong>Company Name</strong> - Name of the company</li>
@@ -26,7 +26,17 @@
                 <li><strong>Industry</strong> - Company industry (optional)</li>
                 <li><strong>Website</strong> - Company website (optional)</li>
             </ul>
-            <p class="mt-4 text-xs text-gray-600">The CSV file should have a header row. Column names are case-insensitive and spaces will be converted to underscores.</p>
+            <p class="mt-1 text-xs text-gray-600">The CSV file should have a header row. Column names are case-insensitive and spaces will be converted to underscores.</p>
+            <div class="mt-3">
+                <a 
+                    href="{{ asset('templates/leads_import_template.csv') }}"
+                    download
+                    class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50"
+                >
+                    <flux:icon name="arrow-down-tray" class="size-4" />
+                    <span>Download CSV template</span>
+                </a>
+            </div>
         </div>
 
         @if($message)
@@ -44,7 +54,9 @@
                     type="file"
                     wire:model="csvFile"
                     accept=".csv,.txt"
-                    class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-orange-500 focus:outline-none"
+                    class="dropify"
+                    data-allowed-file-extensions="csv txt"
+                    data-max-file-size="10M"
                 >
                 @error('csvFile') 
                     <span class="text-red-600 text-xs mt-1">{{ $message }}</span> 
@@ -74,16 +86,38 @@
         </form>
 
         @if($isImporting)
-            <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div class="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
                 <div class="flex items-center gap-2">
-                    <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg class="animate-spin h-5 w-5 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span class="text-blue-800">Importing leads... Please wait.</span>
+                    <span class="text-orange-800">Importing leads... Please wait.</span>
                 </div>
             </div>
         @endif
+
+        <!-- Dropify assets (using working URLs) -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script src="https://jeremyfagis.github.io/dropify/dist/js/dropify.min.js" type="text/javascript"></script>
+        <link rel="stylesheet" type="text/css" href="https://jeremyfagis.github.io/dropify/dist/css/dropify.min.css">
+        <script>
+            function initDropify() {
+                if (window.jQuery && $('.dropify').length) {
+                    $('.dropify').dropify();
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', initDropify);
+
+            document.addEventListener('livewire:load', function () {
+                initDropify();
+                if (window.Livewire && window.Livewire.hook) {
+                    window.Livewire.hook('message.processed', function () {
+                        initDropify();
+                    });
+                }
+            });
+        </script>
     </div>
 </div>
-

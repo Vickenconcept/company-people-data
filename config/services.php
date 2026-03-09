@@ -41,12 +41,20 @@ return [
     |--------------------------------------------------------------------------
     */
 
+    'scraper' => [
+        'provider' => env('SCRAPER_PROVIDER', 'scraperapi'),
+    ],
+
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
     ],
 
     'scraperapi' => [
         'api_key' => env('SCRAPERAPI_API_KEY'),
+    ],
+
+    'scrapingbee' => [
+        'api_key' => env('SCRAPINGBEE_API_KEY'),
     ],
 
     'apollo' => [

@@ -9,10 +9,12 @@ use Illuminate\Support\Facades\Log;
 class ScraperService
 {
     protected string $apiKey;
+    protected string $provider;
 
-    public function __construct(?string $apiKey = null)
+    public function __construct(?string $apiKey = null, ?string $provider = null)
     {
-        $this->apiKey = $apiKey ?? config('services.scraperapi.api_key');
+        $this->provider = $provider ?? config('services.scraper.provider', 'scraperapi');
+        $this->apiKey = $apiKey ?? $this->getDefaultApiKeyForProvider();
     }
 
     /**
@@ -34,14 +36,14 @@ class ScraperService
 
     /**
      * Scrape website content using ScraperAPI
-     * Automatically retries with premium mode for protected sites (Cloudflare, etc.)
+     * or ScrapingBee depending on configured provider.
+     * For ScraperAPI, automatically retries with premium modes for protected sites.
      */
     public function scrapeWebsite(string $url): array
     {
-        Log::info('🌐 ScraperService: Starting website scrape', [
-            'url' => $url,
-            'has_api_key' => !empty($this->apiKey),
-        ]);
+        if ($this->provider === 'scrapingbee') {
+            return $this->scrapeWithScrapingBee($url);
+        }
 
         // Try standard scrape first
         $result = $this->attemptScrape($url, false);
@@ -53,20 +55,12 @@ class ScraperService
              str_contains($result['error'] ?? '', 'premium') ||
              str_contains($result['error'] ?? '', 'Cloudflare'))) {
             
-            Log::info('🔄 ScraperService: Protected domain detected, trying premium mode', [
-                'url' => $url,
-            ]);
-            
             // Try with premium mode
             $premiumResult = $this->attemptScrape($url, true);
             
             // If premium also fails, try ultra_premium
             if (!$premiumResult['success'] && 
                 $premiumResult['status'] === 500) {
-                
-                Log::info('🔄 ScraperService: Premium mode failed, trying ultra_premium mode', [
-                    'url' => $url,
-                ]);
                 
                 return $this->attemptScrape($url, true, true);
             }
@@ -91,10 +85,8 @@ class ScraperService
             
             if ($ultraPremium) {
                 $params['ultra_premium'] = 'true';
-                Log::info('🌐 ScraperService: Using ultra_premium mode', ['url' => $url]);
             } elseif ($premium) {
                 $params['premium'] = 'true';
-                Log::info('🌐 ScraperService: Using premium mode', ['url' => $url]);
             }
             
             // Increase timeout to 90 seconds for premium modes (they take longer)
@@ -102,23 +94,9 @@ class ScraperService
             
             $response = Http::timeout($timeout)->get('http://api.scraperapi.com', $params);
 
-            Log::info('🌐 ScraperService: API response received', [
-                'url' => $url,
-                'status' => $response->status(),
-                'response_size' => strlen($response->body()),
-                'premium_mode' => $premium || $ultraPremium,
-            ]);
-
             if ($response->successful()) {
                 $html = $response->body();
                 $content = $this->extractTextContent($html);
-
-                Log::info('✅ ScraperService: Website scraped successfully', [
-                    'url' => $url,
-                    'html_length' => strlen($html),
-                    'content_length' => strlen($content),
-                    'premium_mode' => $premium || $ultraPremium,
-                ]);
 
                 return [
                     'success' => true,
@@ -149,6 +127,74 @@ class ScraperService
                 'message' => $e->getMessage(),
                 'is_timeout' => $isTimeout,
                 'premium_mode' => $premium || $ultraPremium,
+            ]);
+
+            return [
+                'success' => false,
+                'status' => $isTimeout ? 408 : 500,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Get default API key based on configured provider
+     */
+    protected function getDefaultApiKeyForProvider(): ?string
+    {
+        return match ($this->provider) {
+            'scrapingbee' => config('services.scrapingbee.api_key'),
+            default => config('services.scraperapi.api_key'),
+        };
+    }
+
+    /**
+     * Scrape using ScrapingBee API
+     */
+    protected function scrapeWithScrapingBee(string $url): array
+    {
+        try {
+            $params = [
+                'api_key' => $this->apiKey,
+                'url' => $url,
+                'render_js' => 'true',
+            ];
+
+            $timeout = 90;
+
+            $response = Http::timeout($timeout)->get('https://app.scrapingbee.com/api/v1/', $params);
+
+            if ($response->successful()) {
+                $html = $response->body();
+                $content = $this->extractTextContent($html);
+
+                return [
+                    'success' => true,
+                    'content' => $content,
+                    'html' => $html,
+                    'url' => $url,
+                ];
+            }
+
+            $errorBody = $response->body();
+            Log::error('❌ ScraperService: ScrapingBee API Error', [
+                'url' => $url,
+                'status' => $response->status(),
+                'body' => substr($errorBody, 0, 500),
+            ]);
+
+            return [
+                'success' => false,
+                'status' => $response->status(),
+                'error' => 'Failed to scrape website with ScrapingBee: HTTP ' . $response->status() . ' - ' . substr($errorBody, 0, 200),
+            ];
+        } catch (\Exception $e) {
+            $isTimeout = str_contains($e->getMessage(), 'timed out') || str_contains($e->getMessage(), 'timeout');
+
+            Log::error('❌ ScraperService: ScrapingBee Exception', [
+                'url' => $url,
+                'message' => $e->getMessage(),
+                'is_timeout' => $isTimeout,
             ]);
 
             return [

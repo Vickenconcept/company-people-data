@@ -7,8 +7,8 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Layout('components.layouts.app', ['title' => 'Lead Generation Dashboard'])]
-class Dashboard extends Component
+#[Layout('components.layouts.app', ['title' => 'All Lead Requests'])]
+class AllLeads extends Component
 {
     use WithPagination;
 
@@ -18,45 +18,46 @@ class Dashboard extends Component
     public ?string $statusFilter = null;
     public ?string $dateFrom = null;
     public ?string $dateTo = null;
+    public array $stats = [];
 
-    public function toggleSelectAll()
+    public function toggleSelectAll(): void
     {
-        $leadRequests = LeadRequest::where('user_id', auth()->id())
+        $leadRequests = $this->buildBaseQuery()
             ->latest()
-            ->paginate(10);
-        
+            ->paginate(15);
+
         $currentPageIds = $leadRequests->pluck('id')->toArray();
 
         if ($this->selectAll) {
-            // Deselect all on current page
             $this->selected = array_values(array_diff($this->selected, $currentPageIds));
         } else {
-            // Select all on current page
             $this->selected = array_values(array_unique(array_merge($this->selected, $currentPageIds)));
         }
+
         $this->selectAll = !$this->selectAll;
     }
 
-    public function toggleSelect($id)
+    public function toggleSelect(int $id): void
     {
         if (in_array($id, $this->selected)) {
             $this->selected = array_diff($this->selected, [$id]);
         } else {
             $this->selected[] = $id;
         }
+
         $this->selectAll = false;
     }
 
-    public function delete($id)
+    public function delete(int $id): void
     {
         $leadRequest = LeadRequest::where('user_id', auth()->id())->findOrFail($id);
         $leadRequest->delete();
-        
+
         $this->selected = array_diff($this->selected, [$id]);
         session()->flash('message', 'Lead request deleted successfully.');
     }
 
-    public function bulkDelete()
+    public function bulkDelete(): void
     {
         if (empty($this->selected)) {
             session()->flash('error', 'Please select at least one lead request to delete.');
@@ -72,33 +73,32 @@ class Dashboard extends Component
         session()->flash('message', "{$count} lead request(s) deleted successfully.");
     }
 
-    public function updatedSelected()
+    public function updatedSelected(): void
     {
-        // Reset selectAll when selection changes
         $this->selectAll = false;
     }
 
-    public function updatingSearch()
+    public function updatingSearch(): void
     {
         $this->resetPage();
     }
 
-    public function updatingStatusFilter()
+    public function updatingStatusFilter(): void
     {
         $this->resetPage();
     }
 
-    public function updatingDateFrom()
+    public function updatingDateFrom(): void
     {
         $this->resetPage();
     }
 
-    public function updatingDateTo()
+    public function updatingDateTo(): void
     {
         $this->resetPage();
     }
 
-    public function clearFilters()
+    public function clearFilters(): void
     {
         $this->search = '';
         $this->statusFilter = null;
@@ -107,24 +107,36 @@ class Dashboard extends Component
         $this->resetPage();
     }
 
-    public function render()
+    protected function computeStats(): void
+    {
+        $baseQuery = LeadRequest::where('user_id', auth()->id());
+
+        $this->stats = [
+            'total' => $baseQuery->count(),
+            'completed' => $baseQuery->clone()->where('status', 'completed')->count(),
+            'processing' => $baseQuery->clone()->where('status', 'processing')->count(),
+            'pending' => $baseQuery->clone()->where('status', 'pending')->count(),
+            'failed' => $baseQuery->clone()->where('status', 'failed')->count(),
+            'total_companies' => $baseQuery->clone()->sum('companies_found'),
+            'total_contacts' => $baseQuery->clone()->sum('contacts_found'),
+        ];
+    }
+
+    protected function buildBaseQuery()
     {
         $query = LeadRequest::where('user_id', auth()->id());
 
-        // Apply search filter
         if (!empty($this->search)) {
             $query->where(function ($q) {
                 $q->where('reference_company_name', 'like', '%' . $this->search . '%')
-                  ->orWhere('reference_company_url', 'like', '%' . $this->search . '%');
+                    ->orWhere('reference_company_url', 'like', '%' . $this->search . '%');
             });
         }
 
-        // Apply status filter
         if (!empty($this->statusFilter)) {
             $query->where('status', $this->statusFilter);
         }
 
-        // Apply date filters
         if (!empty($this->dateFrom)) {
             $query->whereDate('created_at', '>=', $this->dateFrom);
         }
@@ -132,12 +144,19 @@ class Dashboard extends Component
             $query->whereDate('created_at', '<=', $this->dateTo);
         }
 
-        // Show only a small slice of the most recent requests on the dashboard.
+        return $query;
+    }
+
+    public function render()
+    {
+        $this->computeStats();
+
+        $query = $this->buildBaseQuery();
+
         $leadRequests = $query->withCount('leadResults')
             ->latest()
-            ->paginate(5);
+            ->paginate(15);
 
-        // Check if all items on current page are selected
         $currentPageIds = $leadRequests->pluck('id')->toArray();
         $allSelected = !empty($currentPageIds) && count(array_intersect($currentPageIds, $this->selected)) === count($currentPageIds);
         if ($allSelected && !$this->selectAll) {
@@ -146,52 +165,9 @@ class Dashboard extends Component
             $this->selectAll = false;
         }
 
-        // Enhanced stats with analytics
-        $baseQuery = LeadRequest::where('user_id', auth()->id());
-        
-        // Total leads and contacts found
-        $totalLeads = $baseQuery->count();
-        $totalCompanies = $baseQuery->sum('companies_found');
-        $totalContacts = $baseQuery->sum('contacts_found');
-        
-        // Status breakdown
-        $stats = [
-            'total' => $totalLeads,
-            'completed' => $baseQuery->clone()->where('status', 'completed')->count(),
-            'processing' => $baseQuery->clone()->where('status', 'processing')->count(),
-            'pending' => $baseQuery->clone()->where('status', 'pending')->count(),
-            'failed' => $baseQuery->clone()->where('status', 'failed')->count(),
-            'total_companies' => $totalCompanies,
-            'total_contacts' => $totalContacts,
-        ];
-
-        // Conversion analytics (from lead results)
-        $leadResultsQuery = \App\Models\LeadResult::whereHas('leadRequest', function ($q) {
-            $q->where('user_id', auth()->id());
-        });
-        
-        $stats['conversion'] = [
-            'total' => $leadResultsQuery->count(),
-            'pending' => $leadResultsQuery->clone()->where('status', 'pending')->count(),
-            'contacted' => $leadResultsQuery->clone()->where('status', 'contacted')->count(),
-            'responded' => $leadResultsQuery->clone()->where('status', 'responded')->count(),
-            'converted' => $leadResultsQuery->clone()->where('status', 'converted')->count(),
-            'rejected' => $leadResultsQuery->clone()->where('status', 'rejected')->count(),
-        ];
-
-        // Calculate conversion rate
-        if ($stats['conversion']['contacted'] > 0) {
-            $stats['conversion_rate'] = round(
-                ($stats['conversion']['converted'] / $stats['conversion']['contacted']) * 100,
-                2
-            );
-        } else {
-            $stats['conversion_rate'] = 0;
-        }
-
-        return view('livewire.leads.dashboard', [
+        return view('livewire.leads.all-leads', [
             'leadRequests' => $leadRequests,
-            'stats' => $stats,
         ]);
     }
 }
+

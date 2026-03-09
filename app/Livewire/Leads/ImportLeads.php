@@ -110,10 +110,12 @@ class ImportLeads extends Component
                         }
                     }
 
-                    // Find or create person
+                    // Find or create person (only if we have a company)
                     $person = null;
-                    if (!empty($contactName) || !empty($email)) {
-                        $personData = [];
+                    if ($company && (!empty($contactName) || !empty($email))) {
+                        $personData = [
+                            'company_id' => $company->id,
+                        ];
                         if (!empty($contactName)) {
                             $personData['full_name'] = $contactName;
                         }
@@ -129,12 +131,12 @@ class ImportLeads extends Component
 
                         if (!empty($email)) {
                             $person = Person::firstOrCreate(
-                                ['email' => $email],
+                                ['email' => $email, 'company_id' => $company->id],
                                 $personData
                             );
                         } elseif (!empty($contactName)) {
                             $person = Person::firstOrCreate(
-                                ['full_name' => $contactName],
+                                ['full_name' => $contactName, 'company_id' => $company->id],
                                 $personData
                             );
                         }
