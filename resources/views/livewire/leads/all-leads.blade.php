@@ -11,7 +11,7 @@
         <div class="flex flex-wrap gap-2">
             <a
                 href="{{ route('leads.export') }}"
-                class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50"
+                class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium !text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50"
             >
                 <flux:icon name="arrow-up-tray" class="size-4" />
                 <span>{{ __('Export CSV') }}</span>
@@ -21,8 +21,8 @@
                 wire:navigate
                 class="inline-flex items-center gap-2 rounded-full bg-orange-500 px-5 py-2 text-xs font-semibold text-white shadow-md shadow-orange-500/30 hover:bg-orange-600"
             >
-                <flux:icon name="plus" class="size-4" />
-                <span>{{ __('New Lead Request') }}</span>
+                <flux:icon name="plus" class="size-4 !text-white" />
+                <span class=" !text-white">{{ __('New Lead Request') }}</span>
             </a>
         </div>
     </div>
