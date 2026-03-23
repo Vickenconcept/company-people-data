@@ -306,6 +306,17 @@
 
                 <!-- Action Buttons -->
                 <div class="px-6 py-4 flex flex-wrap items-center gap-3 border-b border-slate-100">
+                    @php
+                        $massSendAvailableCount = $leadRequest->leadResults()
+                            ->whereHas('generatedEmail')
+                            ->whereHas('person', function ($query) {
+                                $query->whereNotNull('email')->where('email', '!=', '');
+                            })
+                            ->whereDoesntHave('queuedEmails', function ($query) {
+                                $query->whereIn('status', ['pending', 'sent']);
+                            })
+                            ->count();
+                    @endphp
                     <button 
                         wire:click="selectAll"
                         class="px-4 py-2 text-sm font-semibold bg-slate-100 text-slate-700 rounded-full hover:bg-slate-200 transition-colors cursor-pointer"
@@ -341,6 +352,14 @@
                             class="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-full hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-sm cursor-pointer"
                         >
                             Queue & Send ({{ $generatedCount }})
+                        </button>
+                    @endif
+                    @if($massSendAvailableCount > 0)
+                        <button 
+                            wire:click="openMassSendModal"
+                            class="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-full hover:from-teal-600 hover:to-teal-700 transition-all shadow-sm cursor-pointer"
+                        >
+                            Mass Send Generated ({{ $massSendAvailableCount }})
                         </button>
                     @endif
                     @if(!empty($selectedLeadResults))
@@ -773,6 +792,44 @@
                     >
                         <span wire:loading.remove>Queue & Send</span>
                         <span wire:loading>Queueing...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Mass Send Confirmation Modal -->
+    @if($showMassSendModal)
+        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" wire:click="closeMassSendModal">
+            <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4" wire:click.stop>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold text-gray-900">Mass Send Generated Emails</h2>
+                    <button wire:click="closeMassSendModal" class="text-gray-400 hover:text-gray-600 cursor-pointer">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <p class="text-gray-700 mb-4">
+                    Queue and send <strong>{{ $massSendCount }} generated email(s)</strong> for this campaign?
+                    Jobs are automatically staggered to reduce rate-limit risk.
+                </p>
+
+                <div class="flex justify-end gap-3">
+                    <button 
+                        wire:click="closeMassSendModal"
+                        class="px-4 py-2 text-sm font-semibold bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        wire:click="massSendGeneratedEmails"
+                        wire:loading.attr="disabled"
+                        class="px-4 py-2 text-sm font-semibold bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:bg-gray-300 cursor-pointer"
+                    >
+                        <span wire:loading.remove wire:target="massSendGeneratedEmails">Mass Send</span>
+                        <span wire:loading wire:target="massSendGeneratedEmails">Queueing...</span>
                     </button>
                 </div>
             </div>

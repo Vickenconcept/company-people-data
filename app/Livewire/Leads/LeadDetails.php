@@ -8,8 +8,10 @@ use App\Models\Tag;
 use App\Models\EmailTemplate;
 use App\Services\EmailAutomationService;
 use App\Services\OpenAIService;
+use App\Jobs\ProcessEmailAutomation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -27,6 +29,7 @@ class LeadDetails extends Component
     public array $selectedLeadResults = [];
     public bool $showGenerateModal = false;
     public bool $showQueueModal = false;
+    public bool $showMassSendModal = false;
     public bool $showQueuedEmailsModal = false;
     public bool $showEmailModal = false;
     public string $customContext = '';
@@ -35,11 +38,13 @@ class LeadDetails extends Component
     public ?GeneratedEmail $viewingEmail = null;
     public bool $isRegenerating = false;
     public bool $isQueueing = false;
+    public bool $isMassQueueing = false;
     public ?string $message = null;
     public string $messageType = 'success'; // 'success' or 'error'
     public int $batchSize = 5; // Generate 5 emails at a time
     public bool $showBulkStatusModal = false;
     public ?string $bulkStatus = null;
+    public int $massSendCount = 0;
     
     // Advanced filtering
     public ?string $filterStatus = null;
@@ -410,26 +415,7 @@ class LeadDetails extends Component
         $this->message = null;
 
         try {
-            $emailAutomationService = new EmailAutomationService();
-            $queuedCount = 0;
-
-            foreach ($leadResults as $leadResult) {
-                if (!$leadResult->person || !$leadResult->generatedEmail) {
-                    continue;
-                }
-
-                // Create queued email
-                $queuedEmail = $emailAutomationService->queueEmail(
-                    $leadResult->person,
-                    $leadResult->generatedEmail->subject,
-                    $leadResult->generatedEmail->body,
-                    $leadResult->id
-                );
-
-                // Dispatch email automation job
-                \App\Jobs\ProcessEmailAutomation::dispatch($leadResult);
-                $queuedCount++;
-            }
+            $queuedCount = $this->queueAndDispatchLeadResults($leadResults->values());
 
             if ($queuedCount > 0) {
                 $this->message = "{$queuedCount} email(s) queued successfully! They will be sent in the background.";
@@ -470,6 +456,111 @@ class LeadDetails extends Component
     public function closeQueueModal(): void
     {
         $this->showQueueModal = false;
+    }
+
+    public function openMassSendModal(): void
+    {
+        $this->massSendCount = $this->leadRequest->leadResults()
+            ->whereHas('generatedEmail')
+            ->whereHas('person', function ($query) {
+                $query->whereNotNull('email')->where('email', '!=', '');
+            })
+            ->whereDoesntHave('queuedEmails', function ($query) {
+                $query->whereIn('status', ['pending', 'sent']);
+            })
+            ->count();
+
+        if ($this->massSendCount === 0) {
+            $this->message = 'No generated unsent emails found for this campaign.';
+            $this->messageType = 'error';
+            return;
+        }
+
+        $this->showMassSendModal = true;
+        $this->message = null;
+    }
+
+    public function closeMassSendModal(): void
+    {
+        $this->showMassSendModal = false;
+    }
+
+    public function massSendGeneratedEmails(): void
+    {
+        $this->isMassQueueing = true;
+        $this->message = null;
+
+        try {
+            $leadResults = $this->leadRequest->leadResults()
+                ->whereHas('generatedEmail')
+                ->whereHas('person', function ($query) {
+                    $query->whereNotNull('email')->where('email', '!=', '');
+                })
+                ->whereDoesntHave('queuedEmails', function ($query) {
+                    $query->whereIn('status', ['pending', 'sent']);
+                })
+                ->with(['person', 'generatedEmail'])
+                ->get();
+
+            if ($leadResults->isEmpty()) {
+                $this->message = 'No generated unsent emails found for this campaign.';
+                $this->messageType = 'error';
+                return;
+            }
+
+            $queuedCount = $this->queueAndDispatchLeadResults($leadResults->values());
+
+            if ($queuedCount > 0) {
+                $this->message = "{$queuedCount} email(s) queued for mass sending. Delivery is throttled automatically to avoid rate limits.";
+                $this->messageType = 'success';
+                $this->closeMassSendModal();
+                $this->leadRequest->refresh();
+            } else {
+                $this->message = 'No emails were queued. They may already be queued or sent.';
+                $this->messageType = 'error';
+            }
+        } catch (\Exception $e) {
+            Log::error('Mass email queueing failed', ['error' => $e->getMessage()]);
+            $this->message = 'An error occurred while mass queueing emails: ' . $e->getMessage();
+            $this->messageType = 'error';
+        } finally {
+            $this->isMassQueueing = false;
+        }
+    }
+
+    private function queueAndDispatchLeadResults($leadResults): int
+    {
+        $emailAutomationService = new EmailAutomationService();
+        $ratePerMinute = max(1, min(120, (int) env('MASS_EMAILS_RATE_PER_MINUTE', 30)));
+        $queuedCount = 0;
+        $baseTime = Carbon::now();
+
+        foreach ($leadResults as $leadResult) {
+            if (!$leadResult->person || !$leadResult->generatedEmail) {
+                continue;
+            }
+
+            $hasQueuedOrSent = $leadResult->queuedEmails()
+                ->whereIn('status', ['pending', 'sent'])
+                ->exists();
+
+            if ($hasQueuedOrSent) {
+                continue;
+            }
+
+            $emailAutomationService->queueEmail(
+                $leadResult->person,
+                $leadResult->generatedEmail->subject,
+                $leadResult->generatedEmail->body,
+                $leadResult->id
+            );
+
+            $delayMs = (int) round(($queuedCount * 60000) / $ratePerMinute);
+            ProcessEmailAutomation::dispatch($leadResult)->delay($baseTime->copy()->addMilliseconds($delayMs));
+            $queuedCount++;
+        }
+
+        return $queuedCount;
     }
 
     public function openQueuedEmailsModal(): void
