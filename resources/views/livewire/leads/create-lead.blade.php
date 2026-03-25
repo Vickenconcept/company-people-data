@@ -76,13 +76,66 @@
 
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1">Country (Optional)</label>
-                    <input 
-                        wire:model="country" 
-                        type="text"
-                        placeholder="e.g., NG, US, GB" 
-                        maxlength="2"
-                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 uppercase focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-400"
-                    />
+                    @php
+                        $countryOptions = [
+                            '' => 'Any / Not specified',
+                            'US' => 'United States',
+                            'CA' => 'Canada',
+                            'GB' => 'United Kingdom',
+                            'IE' => 'Ireland',
+                            'NG' => 'Nigeria',
+                            'ZA' => 'South Africa',
+                            'KE' => 'Kenya',
+                            'GH' => 'Ghana',
+                            'AU' => 'Australia',
+                            'NZ' => 'New Zealand',
+                            'DE' => 'Germany',
+                            'FR' => 'France',
+                            'ES' => 'Spain',
+                            'IT' => 'Italy',
+                            'NL' => 'Netherlands',
+                            'SE' => 'Sweden',
+                            'NO' => 'Norway',
+                            'DK' => 'Denmark',
+                            'FI' => 'Finland',
+                            'CH' => 'Switzerland',
+                            'BE' => 'Belgium',
+                            'AT' => 'Austria',
+                            'PL' => 'Poland',
+                            'PT' => 'Portugal',
+                            'BR' => 'Brazil',
+                            'MX' => 'Mexico',
+                            'AR' => 'Argentina',
+                            'CL' => 'Chile',
+                            'CO' => 'Colombia',
+                            'IN' => 'India',
+                            'PK' => 'Pakistan',
+                            'BD' => 'Bangladesh',
+                            'LK' => 'Sri Lanka',
+                            'SG' => 'Singapore',
+                            'MY' => 'Malaysia',
+                            'TH' => 'Thailand',
+                            'PH' => 'Philippines',
+                            'VN' => 'Vietnam',
+                            'ID' => 'Indonesia',
+                            'AE' => 'United Arab Emirates',
+                            'SA' => 'Saudi Arabia',
+                            'EG' => 'Egypt',
+                            'IL' => 'Israel',
+                            'TR' => 'Türkiye',
+                            'JP' => 'Japan',
+                            'KR' => 'South Korea',
+                            'CN' => 'China',
+                        ];
+                    @endphp
+                    <select
+                        wire:model="country"
+                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 uppercase focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                    >
+                        @foreach($countryOptions as $code => $label)
+                            <option value="{{ $code }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
                     @error('country') <flux:text class="text-red-600">{{ $message }}</flux:text> @enderror
                     <flux:text class="text-xs text-slate-500">Optional: ISO 2-letter code (e.g., NG, US, GB).</flux:text>
                 </div>

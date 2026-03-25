@@ -8,11 +8,21 @@ use App\Services\EmailAutomationService;
 use App\Services\OpenAIService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Queue\Middleware\RateLimited;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Facades\Log;
 
 class ProcessEmailAutomation implements ShouldQueue
 {
     use Queueable;
+
+    public int $tries = 5;
+    public int $timeout = 120;
+
+    /**
+     * @var array<int, int>
+     */
+    public array $backoff = [30, 60, 120, 300];
 
     /**
      * Create a new job instance.
@@ -20,6 +30,17 @@ class ProcessEmailAutomation implements ShouldQueue
     public function __construct(
         public LeadResult $leadResult
     ) {
+    }
+
+    /**
+     * @return array<int, object>
+     */
+    public function middleware(): array
+    {
+        return [
+            new RateLimited('email-send'),
+            (new WithoutOverlapping("send-email-{$this->leadResult->id}"))->releaseAfter(30),
+        ];
     }
 
     /**
@@ -63,9 +84,20 @@ class ProcessEmailAutomation implements ShouldQueue
                 $openAIService = new OpenAIService();
                 $openAIService->setApiKeyFromUser($this->leadResult->leadRequest->user);
 
+                $sender = $this->leadResult->leadRequest->user;
+                $senderData = [
+                    'name' => $sender?->name ?? '',
+                    'email' => $sender?->email ?? '',
+                    'company_name' => config('app.name', 'Company'),
+                    'from_name' => config('mail.from.name'),
+                    'from_address' => config('mail.from.address'),
+                ];
+
                 $emailResult = $openAIService->generateEmailContent(
                     $this->leadResult->person->toArray(),
-                    $this->leadResult->company->toArray()
+                    $this->leadResult->company->toArray(),
+                    null,
+                    $senderData
                 );
 
                 if (!$emailResult['success']) {

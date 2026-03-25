@@ -12,6 +12,7 @@ use App\Jobs\ProcessEmailAutomation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -109,6 +110,16 @@ class LeadDetails extends Component
         $this->selectedLeadResults = [];
     }
 
+    public function toggleSelectAll(bool $checked): void
+    {
+        if ($checked) {
+            $this->selectAll();
+            return;
+        }
+
+        $this->deselectAll();
+    }
+
     public function openGenerateModal(): void
     {
         if (empty($this->selectedLeadResults)) {
@@ -118,14 +129,16 @@ class LeadDetails extends Component
         }
 
         $this->showGenerateModal = true;
-        $this->customContext = '';
         $this->message = null;
+        $this->customContext = '';
+        $this->selectedTemplateId = null;
     }
 
     public function closeGenerateModal(): void
     {
         $this->showGenerateModal = false;
         $this->customContext = '';
+        $this->selectedTemplateId = null;
     }
 
     public function startGenerating(): void
@@ -138,95 +151,36 @@ class LeadDetails extends Component
 
         $this->closeGenerateModal();
         $this->message = null;
-        
-        // Start generating in batches
-        $this->generateBatch();
+
+        $queuedCount = $this->generateBatch();
+
+        if ($queuedCount > 0) {
+            $this->message = "{$queuedCount} email generation job(s) queued. Drafting will run in background with rate limiting.";
+            $this->messageType = 'success';
+        } else {
+            $this->message = 'All selected contacts already have generated emails, or no valid emails were found.';
+            $this->messageType = 'error';
+        }
     }
 
-    public function generateBatch(): void
+    public function generateBatch(): int
     {
-        // Get all lead results that need generation
-        $allLeadResults = $this->leadRequest->leadResults()
+        $leadResults = $this->leadRequest->leadResults()
             ->whereIn('id', $this->selectedLeadResults)
             ->with(['person', 'company', 'leadRequest.user', 'generatedEmail'])
             ->get()
             ->filter(function ($result) {
                 return $result->person 
                     && $result->person->email 
-                    && !$result->generatedEmail; // Only generate if not already generated
+                    && !$result->generatedEmail;
             });
 
-        if ($allLeadResults->isEmpty()) {
-            $this->generatingLeadResultIds = [];
-            $this->message = 'All emails already generated!';
-            $this->messageType = 'success';
-            return;
+        if ($leadResults->isEmpty()) {
+            return 0;
         }
 
-        // Process in batches
-        $batches = $allLeadResults->chunk($this->batchSize);
-        $generatedCount = 0;
-        $openAIService = new OpenAIService();
-
-        foreach ($batches as $batch) {
-            // Mark batch as generating
-            $batchIds = $batch->pluck('id')->toArray();
-            $this->generatingLeadResultIds = array_merge($this->generatingLeadResultIds, $batchIds);
-
-            foreach ($batch as $leadResult) {
-                try {
-                    $openAIService->setApiKeyFromUser($leadResult->leadRequest->user);
-
-                    $emailResult = $openAIService->generateEmailContent(
-                        $leadResult->person->toArray(),
-                        $leadResult->company->toArray(),
-                        $this->customContext ?: null
-                    );
-
-                    if ($emailResult['success']) {
-                        // Save to database
-                        GeneratedEmail::updateOrCreate(
-                            ['lead_result_id' => $leadResult->id],
-                            [
-                                'person_id' => $leadResult->person->id,
-                                'subject' => $emailResult['subject'],
-                                'body' => $emailResult['body'],
-                                'custom_context' => $this->customContext,
-                            ]
-                        );
-                        $generatedCount++;
-                    }
-                } catch (\Exception $e) {
-                    Log::error('Email generation failed for lead result', [
-                        'lead_result_id' => $leadResult->id,
-                        'error' => $e->getMessage(),
-                    ]);
-                } finally {
-                    // Remove from generating list
-                    $this->generatingLeadResultIds = array_values(array_filter(
-                        $this->generatingLeadResultIds,
-                        fn($id) => $id !== $leadResult->id
-                    ));
-                }
-            }
-
-            // Small delay between batches to avoid rate limits
-            if ($batches->count() > 1) {
-                usleep(500000); // 0.5 second
-            }
-        }
-
-        // Refresh to load newly generated emails
-        $this->leadRequest->refresh();
-        $this->generatingLeadResultIds = [];
-
-        if ($generatedCount > 0) {
-            $this->message = "{$generatedCount} email(s) generated successfully!";
-            $this->messageType = 'success';
-        } else {
-            $this->message = 'Failed to generate emails. Please check your OpenAI API key.';
-            $this->messageType = 'error';
-        }
+        // For queued jobs we pass only the user offer/context; the job will rebuild prompt context.
+        return $this->queueEmailGenerationJobs($leadResults->values(), $this->customContext ?: null);
     }
 
     public function viewEmail(int $leadResultId): void
@@ -242,6 +196,11 @@ class LeadDetails extends Component
             return;
         }
         
+        // For the individual email modal, the template/context inputs should reflect
+        // the user offer context used for this generated email.
+        $this->selectedTemplateId = null;
+        $this->customContext = $this->extractUserOfferContext($this->viewingEmail->custom_context ?? null);
+
         $this->showEmailModal = true;
     }
 
@@ -288,10 +247,20 @@ class LeadDetails extends Component
             $openAIService = new OpenAIService();
             $openAIService->setApiKeyFromUser($leadResult->leadRequest->user);
 
+            $sender = $leadResult->leadRequest->user;
+            $senderData = [
+                'name' => $sender?->name ?? '',
+                'email' => $sender?->email ?? '',
+                'company_name' => config('app.name', 'Company'),
+                'from_name' => config('mail.from.name'),
+                'from_address' => config('mail.from.address'),
+            ];
+
             $emailResult = $openAIService->generateEmailContent(
                 $leadResult->person->toArray(),
                 $leadResult->company->toArray(),
-                $this->customContext ?: null
+                $this->buildAiContext($this->customContext !== '' ? $this->customContext : ($this->viewingEmail->custom_context ?? null)),
+                $senderData
             );
 
             if ($emailResult['success']) {
@@ -301,6 +270,7 @@ class LeadDetails extends Component
                     'person_id' => $leadResult->person->id,
                     'subject' => $emailResult['subject'],
                     'body' => $emailResult['body'],
+                    // Store only the user offer/context (template/manual). Campaign context is rebuilt at generation time.
                     'custom_context' => $this->customContext,
                 ]);
 
@@ -351,17 +321,28 @@ class LeadDetails extends Component
             $openAIService = new OpenAIService();
             $openAIService->setApiKeyFromUser($leadResult->leadRequest->user);
 
+            $sender = $leadResult->leadRequest->user;
+            $senderData = [
+                'name' => $sender?->name ?? '',
+                'email' => $sender?->email ?? '',
+                'company_name' => config('app.name', 'Company'),
+                'from_name' => config('mail.from.name'),
+                'from_address' => config('mail.from.address'),
+            ];
+
             $emailResult = $openAIService->generateEmailContent(
                 $leadResult->person->toArray(),
                 $leadResult->company->toArray(),
-                $this->customContext ?: null
+                $this->buildAiContext($this->customContext ?: null),
+                $senderData
             );
 
             if ($emailResult['success']) {
+                $userOffer = $this->customContext !== '' ? $this->customContext : ($this->viewingEmail->custom_context ?? null);
                 $this->viewingEmail->update([
                     'subject' => $emailResult['subject'],
                     'body' => $emailResult['body'],
-                    'custom_context' => $this->customContext,
+                    'custom_context' => $userOffer,
                 ]);
                 
                 $this->viewingEmail->refresh();
@@ -432,6 +413,48 @@ class LeadDetails extends Component
             $this->messageType = 'error';
         } finally {
             $this->isQueueing = false;
+        }
+    }
+
+    public function sendGeneratedEmail(int $leadResultId): void
+    {
+        $this->message = null;
+
+        try {
+            $leadResult = $this->leadRequest->leadResults()
+                ->where('id', $leadResultId)
+                ->with(['person', 'generatedEmail'])
+                ->first();
+
+            if (!$leadResult || !$leadResult->person || !$leadResult->person->email) {
+                $this->message = 'Contact not found or has no email address.';
+                $this->messageType = 'error';
+                return;
+            }
+
+            if (!$leadResult->generatedEmail) {
+                $this->message = 'No generated email found for this contact.';
+                $this->messageType = 'error';
+                return;
+            }
+
+            $queuedCount = $this->queueAndDispatchLeadResults(collect([$leadResult]));
+
+            if ($queuedCount > 0) {
+                $this->message = 'Email queued and will be sent shortly.';
+                $this->messageType = 'success';
+                $this->leadRequest->refresh();
+            } else {
+                $this->message = 'This email is already queued or already sent.';
+                $this->messageType = 'error';
+            }
+        } catch (\Exception $e) {
+            Log::error('Single generated email send failed', [
+                'lead_result_id' => $leadResultId,
+                'error' => $e->getMessage(),
+            ]);
+            $this->message = 'An error occurred while sending this email: ' . $e->getMessage();
+            $this->messageType = 'error';
         }
     }
 
@@ -561,6 +584,99 @@ class LeadDetails extends Component
         }
 
         return $queuedCount;
+    }
+
+    private function queueEmailGenerationJobs(Collection $leadResults, ?string $customContext = null): int
+    {
+        $ratePerMinute = max(1, min(120, (int) env('MASS_EMAIL_GENERATION_RATE_PER_MINUTE', 20)));
+        $queuedCount = 0;
+        $baseTime = Carbon::now();
+
+        foreach ($leadResults as $leadResult) {
+            if (!$leadResult->person || !$leadResult->person->email || $leadResult->generatedEmail) {
+                continue;
+            }
+
+            $delayMs = (int) round(($queuedCount * 60000) / $ratePerMinute);
+            \App\Jobs\GenerateLeadEmailContent::dispatch($leadResult->id, $customContext)
+                ->delay($baseTime->copy()->addMilliseconds($delayMs));
+            $queuedCount++;
+        }
+
+        return $queuedCount;
+    }
+
+    private function buildAiContext(?string $userContext): string
+    {
+        $lr = $this->leadRequest;
+
+        $offer = $this->extractUserOfferContext($userContext);
+
+        $icp = is_array($lr->icp_profile) ? $lr->icp_profile : [];
+        $criteria = is_array($lr->search_criteria) ? $lr->search_criteria : [];
+        $jobTitles = is_array($lr->target_job_titles) ? $lr->target_job_titles : [];
+
+        $parts = [];
+
+        $parts[] = "Campaign context:";
+        $parts[] = "- Reference company: " . ($lr->reference_company_name ?: 'N/A');
+        if (!empty($lr->reference_company_url)) {
+            $parts[] = "- Reference URL: " . $lr->reference_company_url;
+        }
+        if (!empty($lr->country)) {
+            $parts[] = "- Target country: " . $lr->country;
+        }
+        if (!empty($jobTitles)) {
+            $parts[] = "- Target roles: " . implode(', ', array_slice($jobTitles, 0, 10));
+        }
+
+        $industry = data_get($icp, 'industry');
+        $valueProp = data_get($icp, 'value_proposition');
+        if (!empty($industry)) {
+            $parts[] = "- ICP industry: " . $industry;
+        }
+        if (!empty($valueProp)) {
+            $parts[] = "- ICP value proposition: " . $valueProp;
+        }
+
+        $keywords = data_get($criteria, 'keywords');
+        if (is_array($keywords) && !empty($keywords)) {
+            $parts[] = "- Search keywords: " . implode(', ', array_slice($keywords, 0, 12));
+        }
+
+        if (!empty($lr->reference_company_content)) {
+            $content = trim((string) $lr->reference_company_content);
+            if ($content !== '') {
+                $parts[] = "\nReference company notes (scraped):\n" . mb_substr($content, 0, 800);
+            }
+        }
+
+        if ($offer !== '') {
+            $parts[] = "\nOffer / what we want to pitch:\n" . $offer;
+        }
+
+        $context = implode("\n", $parts);
+
+        // Keep it reasonably sized for prompt safety.
+        return mb_substr($context, 0, 2000);
+    }
+
+    private function extractUserOfferContext(?string $storedContext): string
+    {
+        $s = trim((string) ($storedContext ?? ''));
+        if ($s === '') {
+            return '';
+        }
+
+        // For older rows we may have stored a full prompt that includes campaign context.
+        // Extract only the user offer portion so the modal input looks right.
+        $marker = 'Offer / what we want to pitch:';
+        if (str_contains($s, $marker)) {
+            $after = trim(str_replace($marker, '', $s));
+            return $after;
+        }
+
+        return $s;
     }
 
     public function openQueuedEmailsModal(): void

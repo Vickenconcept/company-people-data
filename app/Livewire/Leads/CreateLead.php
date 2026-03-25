@@ -5,6 +5,7 @@ namespace App\Livewire\Leads;
 use App\Jobs\ProcessLeadDiscovery;
 use App\Models\LeadRequest;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -42,8 +43,9 @@ class CreateLead extends Component
             'country' => 'nullable|string|max:2', // ISO country code (2 letters)
         ]);
 
+        /** @var LeadRequest $leadRequest */
         $leadRequest = LeadRequest::create([
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'reference_company_name' => $validated['reference_company_name'],
             'reference_company_url' => $validated['reference_company_url'],
             'target_count' => $validated['target_count'],
@@ -54,7 +56,7 @@ class CreateLead extends Component
 
         Log::info('📋 New Lead Request Created', [
             'lead_request_id' => $leadRequest->id,
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'company_name' => $validated['reference_company_name'],
             'company_url' => $validated['reference_company_url'],
             'target_count' => $validated['target_count'],
@@ -69,7 +71,7 @@ class CreateLead extends Component
 
         session()->flash('message', 'Lead generation request created successfully! Processing will begin shortly.');
 
-        $this->redirect(route('leads.dashboard'), navigate: true);
+        $this->redirect(route('leads.all'), navigate: true);
     }
 
     public function render()

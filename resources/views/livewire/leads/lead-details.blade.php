@@ -214,99 +214,93 @@
 
         <!-- Contacts Tab Content -->
         @if($activeTab === 'contacts')
-            @if($results->count() > 0)
-                <!-- Advanced Filters -->
-                <div class="p-6 bg-slate-50 border-b border-slate-100">
-                    <div class="mb-4 flex items-center justify-between">
-                        <h3 class="text-sm font-semibold text-slate-700">Filters</h3>
-                        @if($filterStatus || $filterIndustry || $filterJobTitle || $filterHasEmail !== null || $filterHasGeneratedEmail !== null || $filterTagId)
-                            <button 
-                                wire:click="clearFilters"
-                                class="text-xs text-orange-600 hover:text-orange-700 font-medium cursor-pointer transition-colors"
-                            >
-                                Clear All
-                            </button>
-                        @endif
+            <!-- Advanced Filters -->
+            <div class="p-6 bg-slate-50 border-b border-slate-100">
+                <div class="mb-4 flex items-center justify-between">
+                    <h3 class="text-sm font-semibold text-slate-700">Filters</h3>
+                    @if($filterStatus || $filterIndustry || $filterJobTitle || $filterHasEmail !== null || $filterHasGeneratedEmail !== null || $filterTagId)
+                        <button 
+                            wire:click="clearFilters"
+                            class="text-xs text-orange-600 hover:text-orange-700 font-medium cursor-pointer transition-colors"
+                        >
+                            Clear All
+                        </button>
+                    @endif
+                </div>
+                <div class="grid gap-3 md:grid-cols-3 lg:grid-cols-5">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1.5">Status</label>
+                        <select 
+                            wire:model.live="filterStatus"
+                            class="w-full text-sm rounded-lg border border-slate-200 bg-white px-3 py-2 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-colors"
+                        >
+                            <option value="">All</option>
+                            <option value="pending">Pending</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="responded">Responded</option>
+                            <option value="converted">Converted</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
                     </div>
-                    <div class="grid gap-3 md:grid-cols-3 lg:grid-cols-6">
-                        <div>
-                            <label class="block text-xs font-medium text-slate-500 mb-1.5">Status</label>
-                            <select 
-                                wire:model.live="filterStatus"
-                                class="w-full text-sm rounded-lg border border-slate-200 bg-white px-3 py-2 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-colors"
-                            >
-                                <option value="">All</option>
-                                <option value="pending">Pending</option>
-                                <option value="contacted">Contacted</option>
-                                <option value="responded">Responded</option>
-                                <option value="converted">Converted</option>
-                                <option value="rejected">Rejected</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-500 mb-1.5">Industry</label>
-                            <select 
-                                wire:model.live="filterIndustry"
-                                class="w-full text-sm rounded-lg border border-slate-200 bg-white px-3 py-2 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-colors"
-                            >
-                                <option value="">All Industries</option>
-                                @foreach($industries as $industry)
-                                    <option value="{{ $industry }}">{{ $industry }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-500 mb-1.5">Job Title</label>
-                            <select 
-                                wire:model.live="filterJobTitle"
-                                class="w-full text-sm rounded-lg border border-slate-200 bg-white px-3 py-2 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-colors"
-                            >
-                                <option value="">All Titles</option>
-                                @foreach($jobTitles as $title)
-                                    <option value="{{ $title }}">{{ $title }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-500 mb-1.5">Has Email</label>
-                            <select 
-                                wire:model.live="filterHasEmail"
-                                class="w-full text-sm rounded-lg border border-slate-200 bg-white px-3 py-2 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-colors"
-                            >
-                                <option value="">All</option>
-                                <option value="1">Yes</option>
-                                <option value="0">No</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-500 mb-1.5">Has Generated Email</label>
-                            <select 
-                                wire:model.live="filterHasGeneratedEmail"
-                                class="w-full text-sm rounded-lg border border-slate-200 bg-white px-3 py-2 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-colors"
-                            >
-                                <option value="">All</option>
-                                <option value="1">Yes</option>
-                                <option value="0">No</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-500 mb-1.5">Tag</label>
-                            <select 
-                                wire:model.live="filterTagId"
-                                class="w-full text-sm rounded-lg border border-slate-200 bg-white px-3 py-2 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-colors"
-                            >
-                                <option value="">All Tags</option>
-                                @foreach($tags as $tag)
-                                    <option value="{{ $tag->id }}">{{ $tag->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1.5">Industry</label>
+                        <select 
+                            wire:model.live="filterIndustry"
+                            class="w-full text-sm rounded-lg border border-slate-200 bg-white px-3 py-2 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-colors"
+                        >
+                            <option value="">All Industries</option>
+                            @foreach($industries as $industry)
+                                <option value="{{ $industry }}">{{ $industry }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1.5">Job Title</label>
+                        <select 
+                            wire:model.live="filterJobTitle"
+                            class="w-full text-sm rounded-lg border border-slate-200 bg-white px-3 py-2 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-colors"
+                        >
+                            <option value="">All Titles</option>
+                            @foreach($jobTitles as $title)
+                                <option value="{{ $title }}">{{ $title }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1.5">Has Email</label>
+                        <select 
+                            wire:model.live="filterHasEmail"
+                            class="w-full text-sm rounded-lg border border-slate-200 bg-white px-3 py-2 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-colors"
+                        >
+                            <option value="">All</option>
+                            <option value="1">Yes</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1.5">Tag</label>
+                        <select 
+                            wire:model.live="filterTagId"
+                            class="w-full text-sm rounded-lg border border-slate-200 bg-white px-3 py-2 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-colors"
+                        >
+                            <option value="">All Tags</option>
+                            @foreach($tags as $tag)
+                                <option value="{{ $tag->id }}">{{ $tag->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
+            </div>
 
                 <!-- Action Buttons -->
                 <div class="px-6 py-4 flex flex-wrap items-center gap-3 border-b border-slate-100">
                     @php
+                        $selectableContactsCount = $leadRequest->leadResults()
+                            ->whereHas('person', function ($query) {
+                                $query->whereNotNull('email')->where('email', '!=', '');
+                            })
+                            ->count();
                         $massSendAvailableCount = $leadRequest->leadResults()
                             ->whereHas('generatedEmail')
                             ->whereHas('person', function ($query) {
@@ -317,28 +311,35 @@
                             })
                             ->count();
                     @endphp
-                    <button 
+                    <button
                         wire:click="selectAll"
-                        class="px-4 py-2 text-sm font-semibold bg-slate-100 text-slate-700 rounded-full hover:bg-slate-200 transition-colors cursor-pointer"
+                        title="Select all contacts with email"
+                        aria-label="Select all contacts with email"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 transition-colors cursor-pointer"
                     >
-                        Select All
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12h16M4 6h16M4 18h16"/></svg>
                     </button>
-                    <button 
+                    <button
                         wire:click="deselectAll"
-                        class="px-4 py-2 text-sm font-semibold bg-slate-100 text-slate-700 rounded-full hover:bg-slate-200 transition-colors cursor-pointer"
+                        title="Clear all selections"
+                        aria-label="Clear all selections"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 hover:border-red-300 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
                     >
-                        Deselect All
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
-                    <span class="text-sm font-medium text-slate-600">
+                    <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700">
                         {{ count($selectedLeadResults) }} selected
                     </span>
                     <div class="flex-1"></div>
-                    <button 
+
+                    <button
                         wire:click="openGenerateModal"
                         @if(empty($selectedLeadResults)) disabled @endif
-                        class="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full hover:from-orange-600 hover:to-orange-700 disabled:from-slate-300 disabled:to-slate-300 disabled:cursor-not-allowed transition-all shadow-sm cursor-pointer"
+                        title="Draft selected emails with AI"
+                        aria-label="Draft selected emails with AI"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 disabled:from-slate-300 disabled:to-slate-300 disabled:cursor-not-allowed transition-all shadow-sm cursor-pointer"
                     >
-                        Generate Emails
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
                     </button>
                     @php
                         $generatedCount = $leadRequest->leadResults()
@@ -347,41 +348,54 @@
                             ->count();
                     @endphp
                     @if($generatedCount > 0)
-                        <button 
+                        <button
                             wire:click="openQueueModal"
-                            class="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-full hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-sm cursor-pointer"
+                            title="Send selected drafted emails ({{ $generatedCount }})"
+                            aria-label="Send selected drafted emails"
+                            class="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-sm cursor-pointer"
                         >
-                            Queue & Send ({{ $generatedCount }})
+                            <span class="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-white text-emerald-700 border border-emerald-200 text-[10px] font-bold leading-4 text-center">{{ $generatedCount }}</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                         </button>
                     @endif
                     @if($massSendAvailableCount > 0)
-                        <button 
+                        <button
                             wire:click="openMassSendModal"
-                            class="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-full hover:from-teal-600 hover:to-teal-700 transition-all shadow-sm cursor-pointer"
+                            title="Send all campaign drafted emails ({{ $massSendAvailableCount }})"
+                            aria-label="Send all campaign drafted emails"
+                            class="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-r from-teal-500 to-teal-600 text-white hover:from-teal-600 hover:to-teal-700 transition-all shadow-sm cursor-pointer"
                         >
-                            Mass Send Generated ({{ $massSendAvailableCount }})
+                            <span class="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-white text-teal-700 border border-teal-200 text-[10px] font-bold leading-4 text-center">{{ $massSendAvailableCount }}</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M3 8l9 6m0 0l9-6m-9 6v7"/></svg>
                         </button>
                     @endif
                     @if(!empty($selectedLeadResults))
-                        <button 
+                        <button
                             wire:click="openBulkStatusModal"
-                            class="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-full hover:from-purple-600 hover:to-purple-700 transition-all shadow-sm cursor-pointer"
+                            title="Bulk update status for selected contacts"
+                            aria-label="Bulk update status"
+                            class="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 transition-all shadow-sm cursor-pointer"
                         >
-                            Update Status ({{ count($selectedLeadResults) }})
+                            <span class="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-white text-purple-700 border border-purple-200 text-[10px] font-bold leading-4 text-center">{{ count($selectedLeadResults) }}</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 4H7a2 2 0 01-2-2V6a2 2 0 012-2h5.586A2 2 0 0114 4.586L18.414 9A2 2 0 0119 10.414V18a2 2 0 01-2 2z"/></svg>
                         </button>
                     @endif
-                    <button 
+                    <button
                         wire:click="openQueuedEmailsModal"
-                        class="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-sky-500 to-sky-600 text-white rounded-full hover:from-sky-600 hover:to-sky-700 transition-all shadow-sm cursor-pointer"
+                        title="View delivery queue and send statuses"
+                        aria-label="View delivery queue"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-r from-sky-500 to-sky-600 text-white hover:from-sky-600 hover:to-sky-700 transition-all shadow-sm cursor-pointer"
                     >
-                        View Queued Emails
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8m-8 4h8m-8 4h5M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>
                     </button>
                     <a 
                         href="{{ route('leads.email-templates') }}" 
                         wire:navigate
-                        class="inline-block px-4 py-2 text-sm font-semibold bg-gradient-to-r from-indigo-500 to-indigo-600 !text-white !hover:text-white rounded-full hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-sm cursor-pointer no-underline"
+                        title="Manage AI drafting templates"
+                        aria-label="Manage templates"
+                        class="inline-flex h-9 w-9 items-center justify-center bg-gradient-to-r from-indigo-500 to-indigo-600 !text-white !hover:text-white rounded-full hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-sm cursor-pointer no-underline"
                     >
-                        Manage Templates
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h10m-7 4h7M5 4h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
                     </a>
                 </div>
 
@@ -400,7 +414,8 @@
                                 <th class="px-4 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider w-10">
                                     <input 
                                         type="checkbox" 
-                                        wire:click="selectAll"
+                                        wire:change="toggleSelectAll($event.target.checked)"
+                                        @if($selectableContactsCount > 0 && count($selectedLeadResults) >= $selectableContactsCount) checked @endif
                                         class="rounded border-slate-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
                                     >
                                 </th>
@@ -419,7 +434,7 @@
                                     $hasGeneratedEmail = $result->generatedEmail !== null;
                                 @endphp
                                 <tr class="group border-b border-slate-100 hover:bg-gradient-to-r hover:from-orange-50/40 hover:to-transparent transition-all duration-150 {{ $isSelected ? 'bg-gradient-to-r from-orange-50 to-transparent' : 'bg-white' }}">
-                                    <td class="px-4 py-4 align-top">
+                                    <td class="px-4 py-3 align-top">
                                         @if($hasEmail)
                                             <input 
                                                 type="checkbox" 
@@ -431,7 +446,7 @@
                                     </td>
                                     
                                     <!-- Company Column -->
-                                    <td class="px-4 py-4 align-top">
+                                    <td class="px-4 py-3 align-top">
                                         <div class="flex items-start gap-2.5">
                                             <div class="flex-shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center text-white font-bold text-xs shadow-sm">
                                                 {{ strtoupper(substr($result->company->name, 0, 1)) }}
@@ -446,8 +461,8 @@
                                     </td>
                                     
                                     <!-- Contact Info Column (merged: name, title, email) -->
-                                    <td class="px-4 py-4 align-top">
-                                        <div class="space-y-2">
+                                    <td class="px-4 py-3 align-top">
+                                        <div class="space-y-1.5">
                                             @if($result->person)
                                                 <div class="flex items-center gap-2">
                                                     <div class="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-slate-700 font-semibold text-xs">
@@ -473,8 +488,8 @@
                                     </td>
                                     
                                     <!-- Status & Tags Column (merged) -->
-                                    <td class="px-4 py-4 align-top">
-                                        <div class="space-y-2">
+                                    <td class="px-4 py-3 align-top">
+                                        <div class="space-y-1.5">
                                             @php
                                                 $statusConfig = [
                                                     'pending' => ['bg' => 'bg-amber-50', 'text' => 'text-amber-700', 'ring' => 'ring-amber-200', 'dot' => 'bg-amber-400'],
@@ -542,41 +557,51 @@
                                     </td>
                                     
                                     <!-- Actions Column (compact) -->
-                                    <td class="px-4 py-4 align-top">
-                                        <div class="flex flex-col gap-1.5">
+                                    <td class="px-4 py-3 align-top">
+                                        <div class="flex items-center gap-2 flex-nowrap">
                                             @if($isGenerating)
-                                            <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-orange-50 border border-orange-200">
+                                            <div class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-orange-50 border border-orange-200">
                                                 <svg class="animate-spin h-3.5 w-3.5 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                 </svg>
-                                                <span class="text-xs font-semibold text-orange-700">Generating</span>
                                             </div>
                                         @elseif($hasGeneratedEmail)
                                             <button 
                                                 wire:click="viewEmail({{ $result->id }})"
-                                                class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-gradient-to-r from-sky-500 to-sky-600 text-white rounded-lg hover:from-sky-600 hover:to-sky-700 hover:shadow active:scale-95 transition-all cursor-pointer"
+                                                title="View and edit drafted email"
+                                                aria-label="View drafted email"
+                                                class="inline-flex h-8 w-8 items-center justify-center text-xs font-semibold bg-gradient-to-r from-sky-500 to-sky-600 text-white rounded-full hover:from-sky-600 hover:to-sky-700 hover:shadow active:scale-95 transition-all cursor-pointer"
                                             >
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                                View Email
+                                            </button>
+                                            <button 
+                                                wire:click="sendGeneratedEmail({{ $result->id }})"
+                                                wire:loading.attr="disabled"
+                                                title="Send drafted email"
+                                                aria-label="Send drafted email"
+                                                class="inline-flex h-8 w-8 items-center justify-center text-xs font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-full hover:from-emerald-600 hover:to-emerald-700 hover:shadow active:scale-95 disabled:from-slate-300 disabled:to-slate-300 disabled:cursor-not-allowed transition-all cursor-pointer"
+                                            >
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                                             </button>
                                         @elseif($hasEmail)
                                             <button 
                                                 wire:click="generateSingleEmail({{ $result->id }})"
                                                 wire:loading.attr="disabled"
-                                                class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 hover:shadow active:scale-95 disabled:from-slate-300 disabled:to-slate-300 disabled:cursor-not-allowed transition-all cursor-pointer"
+                                                title="Draft email with AI"
+                                                aria-label="Draft email with AI"
+                                                class="inline-flex h-8 w-8 items-center justify-center text-xs font-semibold bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full hover:from-orange-600 hover:to-orange-700 hover:shadow active:scale-95 disabled:from-slate-300 disabled:to-slate-300 disabled:cursor-not-allowed transition-all cursor-pointer"
                                             >
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-                                                <span wire:loading.remove wire:target="generateSingleEmail({{ $result->id }})">Generate</span>
-                                                <span wire:loading wire:target="generateSingleEmail({{ $result->id }})">...</span>
                                             </button>
                                         @endif
                                             <button 
                                                 wire:click="openNotesModal({{ $result->id }})"
-                                                class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 text-slate-700 rounded-lg hover:border-slate-300 hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
+                                                title="Add or edit notes"
+                                                aria-label="Add or edit notes"
+                                                class="inline-flex h-8 w-8 items-center justify-center text-xs font-semibold bg-white border border-slate-200 text-slate-700 rounded-full hover:border-slate-300 hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
                                             >
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                                {{ $result->notes ? 'Edit' : 'Add' }}
                                             </button>
                                         </div>
                                     </td>
@@ -585,26 +610,19 @@
                         </tbody>
                     </table>
                 </div>
-                
+
+                @if($results->count() === 0)
+                    <div class="py-12 text-center border-t border-slate-100">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 mb-3">
+                            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 9.172a4 4 0 015.656 0M7.757 7.757a6 6 0 018.486 0M6.343 6.343a8 8 0 0111.314 0M9 13h6m-6 4h6"/></svg>
+                        </div>
+                        <p class="text-slate-600 text-sm font-medium">No contacts match your current filters.</p>
+                    </div>
+                @endif
+
                 <div class="px-6 py-4 border-t border-slate-100">
                     {{ $results->links() }}
                 </div>
-            @else
-                <div class="py-16 text-center">
-                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4">
-                        <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    </div>
-                    <p class="text-slate-600 text-sm font-medium">
-                        @if($leadRequest->status === 'processing')
-                            Processing... Results will appear here once found.
-                        @elseif($leadRequest->status === 'pending')
-                            Waiting to start processing...
-                        @else
-                            No contacts found yet.
-                        @endif
-                    </p>
-                </div>
-            @endif
         @endif
 
         <!-- Companies Tab Content -->
@@ -947,12 +965,50 @@
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Body</label>
-                    <textarea 
-                        rows="12"
-                        wire:blur="updateEmailBody($event.target.value)"
+                    @if($emailTemplates->count() > 0)
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Email Template (Optional)
+                        </label>
+                        <select
+                            wire:model.live="selectedTemplateId"
+                            class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-orange-500 focus:outline-none"
+                        >
+                            <option value="">No Template</option>
+                            @foreach($emailTemplates as $template)
+                                <option value="{{ $template->id }}">{{ $template->name }}</option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Selecting a template will pre-fill the context for regeneration.</p>
+                    @endif
+
+                    <label class="block text-sm font-semibold text-gray-700 mb-2 mt-4">
+                        Custom Context (Optional)
+                    </label>
+                    <textarea
+                        wire:model="customContext"
+                        rows="3"
                         class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-orange-500 focus:outline-none"
-                    >{{ $viewingEmail->body }}</textarea>
+                        placeholder="Add any custom context or instructions for the AI to use when generating emails..."
+                    ></textarea>
+                    <p class="text-xs text-gray-500 mt-1">This context will be used when you click <strong>Regenerate Email</strong>.</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Body</label>
+                    <div class="w-full border-2 border-gray-300 rounded-lg overflow-hidden">
+                        {{-- Quill editor is controlled by Vue; Livewire ignores this region. --}}
+                        <div
+                            id="lead-email-quill-editor"
+                            wire:ignore
+                            class="min-h-[260px]"
+                        ></div>
+                    </div>
+
+                    {{-- JSON state used by the Vue editor to sync content when Livewire rerenders. --}}
+                    <script
+                        type="application/json"
+                        id="lead-email-quill-state"
+                    >@json(['body' => $viewingEmail->body], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)</script>
                 </div>
 
                 <div class="flex justify-between items-center">

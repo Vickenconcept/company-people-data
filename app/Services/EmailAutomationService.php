@@ -15,7 +15,9 @@ class EmailAutomationService
     public function sendEmail(QueuedEmail $queuedEmail): bool
     {
         try {
-            Mail::raw($queuedEmail->body, function ($message) use ($queuedEmail) {
+            $bodyHtml = $this->toHtmlBody($queuedEmail->body);
+
+            Mail::html($bodyHtml, function ($message) use ($queuedEmail, $bodyHtml) {
                 $message->to($queuedEmail->to_email)
                     ->subject($queuedEmail->subject)
                     ->from(
@@ -43,6 +45,31 @@ class EmailAutomationService
 
             return false;
         }
+    }
+
+    private function toHtmlBody(string $body): string
+    {
+        $trimmed = trim($body);
+
+        if ($trimmed === '') {
+            return '<p></p>';
+        }
+
+        // If it's already HTML, keep it as-is.
+        if (str_contains($trimmed, '<')) {
+            return $trimmed;
+        }
+
+        // Convert plain text newlines into HTML paragraphs/br tags.
+        $escaped = htmlspecialchars($trimmed, ENT_QUOTES, 'UTF-8');
+        $paragraphs = preg_split("/\r?\n\r?\n/", $escaped) ?: [$escaped];
+
+        $htmlParagraphs = array_map(function (string $p) {
+            $p = trim($p);
+            return $p === '' ? '<p></p>' : '<p>' . nl2br($p, false) . '</p>';
+        }, $paragraphs);
+
+        return implode('', $htmlParagraphs);
     }
 
     /**

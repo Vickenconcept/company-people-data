@@ -139,10 +139,20 @@ class LeadGenController extends Controller
         $openAIService = new OpenAIService();
         $openAIService->setApiKeyFromUser($leadResult->leadRequest->user);
 
+        $sender = $leadResult->leadRequest->user;
+        $senderData = [
+            'name' => $sender?->name ?? '',
+            'email' => $sender?->email ?? '',
+            'company_name' => config('app.name', 'Company'),
+            'from_name' => config('mail.from.name'),
+            'from_address' => config('mail.from.address'),
+        ];
+
         $emailResult = $openAIService->generateEmailContent(
             $leadResult->person->toArray(),
             $leadResult->company->toArray(),
-            $request->input('custom_context')
+            $request->input('custom_context'),
+            $senderData
         );
 
         if (!$emailResult['success']) {
@@ -206,10 +216,20 @@ class LeadGenController extends Controller
 
             $openAIService->setApiKeyFromUser($leadResult->leadRequest->user);
 
+            $sender = $leadResult->leadRequest->user;
+            $senderData = [
+                'name' => $sender?->name ?? '',
+                'email' => $sender?->email ?? '',
+                'company_name' => config('app.name', 'Company'),
+                'from_name' => config('mail.from.name'),
+                'from_address' => config('mail.from.address'),
+            ];
+
             $emailResult = $openAIService->generateEmailContent(
                 $leadResult->person->toArray(),
                 $leadResult->company->toArray(),
-                $request->input('custom_context')
+                $request->input('custom_context'),
+                $senderData
             );
 
             if ($emailResult['success']) {

@@ -41,6 +41,7 @@ class OpenAIService
         $prompt = $this->getICPAnalysisPrompt($websiteContent, $companyName, $websiteUrl);
 
         try {
+            /** @var \Illuminate\Http\Client\Response $response */
             $response = Http::timeout(60)->withHeaders([
                 'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
@@ -101,6 +102,7 @@ class OpenAIService
         $prompt = $this->getSearchCriteriaPrompt($icpProfile, $country);
 
         try {
+            /** @var \Illuminate\Http\Client\Response $response */
             $response = Http::timeout(60)->withHeaders([
                 'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
@@ -155,11 +157,17 @@ class OpenAIService
     /**
      * Generate email content for outreach
      */
-    public function generateEmailContent(array $personData, array $companyData, ?string $customMessage = null): array
+    public function generateEmailContent(
+        array $personData,
+        array $companyData,
+        ?string $customMessage = null,
+        ?array $senderData = null
+    ): array
     {
-        $prompt = $this->getEmailGenerationPrompt($personData, $companyData, $customMessage);
+        $prompt = $this->getEmailGenerationPrompt($personData, $companyData, $customMessage, $senderData);
 
         try {
+            /** @var \Illuminate\Http\Client\Response $response */
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
@@ -213,6 +221,7 @@ class OpenAIService
     public function createEmbedding(string $text): ?array
     {
         try {
+            /** @var \Illuminate\Http\Client\Response $response */
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
@@ -294,10 +303,16 @@ Example for Travel company:
 - NOT: [\"technology\", \"software\", \"platform\"]";
     }
 
-    protected function getEmailGenerationPrompt(array $person, array $company, ?string $customMessage): string
+    protected function getEmailGenerationPrompt(
+        array $person,
+        array $company,
+        ?string $customMessage,
+        ?array $sender
+    ): string
     {
         $personInfo = json_encode($person, JSON_PRETTY_PRINT);
         $companyInfo = json_encode($company, JSON_PRETTY_PRINT);
+        $senderInfo = json_encode($sender ?? [], JSON_PRETTY_PRINT);
 
         $basePrompt = "Write a professional, personalized cold email for B2B outreach.
 
@@ -306,6 +321,8 @@ Recipient Information:
 
 Company Information:
 {$companyInfo}";
+
+        $basePrompt .= "\n\nSender Information (logged-in user / sender):\n{$senderInfo}";
 
         if ($customMessage) {
             $basePrompt .= "\n\nCustom Message/Context:\n{$customMessage}";
@@ -318,10 +335,21 @@ Company Information:
 4. A soft call-to-action
 5. Professional closing
 
-Format the response as:
-SUBJECT: [subject line]
+Rules:
+- Output BODY as valid HTML only (no Markdown), using simple tags like <p>, <br>, <strong>, and optionally <ul><li>.
+- Use the real recipient name/title/company name from the provided data.
+- Do NOT output bracket-style placeholders like [Your Name] / [Your Company Name] in the final email.
+- If a specific field is missing, adapt naturally:
+  - If recipient full name is missing: start with \"Hi\" or \"Hello\".
+  - If recipient title is missing: omit it (do not add brackets).
+  - If recipient company name is missing: refer to \"your company\".
+  - If sender name is missing: use \"Best regards,\" only.
+- Only if both parties data is unusable (extremely unlikely), you may use a generic sentence; never use bracket placeholders.
+
+Format the response as (exactly this format):
+SUBJECT: <subject line>
 BODY:
-[email body]";
+<html body>";
 
         return $basePrompt;
     }
