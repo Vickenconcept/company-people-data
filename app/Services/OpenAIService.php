@@ -314,7 +314,7 @@ Example for Travel company:
         $companyInfo = json_encode($company, JSON_PRETTY_PRINT);
         $senderInfo = json_encode($sender ?? [], JSON_PRETTY_PRINT);
 
-        $basePrompt = "Write a professional, personalized cold email for B2B outreach.
+        $basePrompt = "Write a professional, personalized email.
 
 Recipient Information:
 {$personInfo}
@@ -328,7 +328,7 @@ Company Information:
             $basePrompt .= "\n\nCustom Message/Context:\n{$customMessage}";
         }
 
-        $basePrompt .= "\n\nGenerate a cold email with:
+        $basePrompt .= "\n\nGenerate an email with:
 1. A compelling subject line
 2. A personalized opening
 3. Clear value proposition
@@ -338,6 +338,13 @@ Company Information:
 Rules:
 - Output BODY as valid HTML only (no Markdown), using simple tags like <p>, <br>, <strong>, and optionally <ul><li>.
 - Use the real recipient name/title/company name from the provided data.
+- Treat Custom Message/Context as the highest priority instruction from the user/template.
+- The subject and body MUST directly reflect the exact intent in Custom Message/Context (sales, job application, partnership, follow-up, support request, etc.).
+- Do not switch to a different intent/angle than the one in Custom Message/Context.
+- Campaign background is supporting information only; never override the primary instruction with campaign background.
+- If context indicates job application/career intent, write as an application email (skills, fit, interest, next-step), NOT a sales or collaboration pitch.
+- Avoid phrases like \"our platform\", \"our solution\", \"collaboration opportunity\" unless explicitly requested in Custom Message/Context.
+- Do not mention sender company unless a real sender company is explicitly provided in Sender Information or Custom Message/Context.
 - Do NOT output bracket-style placeholders like [Your Name] / [Your Company Name] in the final email.
 - If a specific field is missing, adapt naturally:
   - If recipient full name is missing: start with \"Hi\" or \"Hello\".
@@ -349,7 +356,7 @@ Rules:
 Format the response as (exactly this format):
 SUBJECT: <subject line>
 BODY:
-<html body>";
+<body html only, no <html> wrapper>";
 
         return $basePrompt;
     }

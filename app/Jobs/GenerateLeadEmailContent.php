@@ -61,7 +61,7 @@ class GenerateLeadEmailContent implements ShouldQueue
             $senderData = [
                 'name' => $sender?->name ?? '',
                 'email' => $sender?->email ?? '',
-                'company_name' => config('app.name', 'Company'),
+                'company_name' => '',
                 'from_name' => config('mail.from.name'),
                 'from_address' => config('mail.from.address'),
             ];
@@ -111,7 +111,10 @@ class GenerateLeadEmailContent implements ShouldQueue
         $jobTitles = is_array($leadRequest->target_job_titles) ? $leadRequest->target_job_titles : [];
 
         $parts = [];
-        $parts[] = "Campaign context:";
+        $parts[] = "Primary instruction from user/template:";
+        $parts[] = $offer !== '' ? $offer : 'No explicit instruction provided.';
+        $parts[] = "";
+        $parts[] = "Campaign background (supporting context only):";
         $parts[] = "- Reference company: " . ($leadRequest->reference_company_name ?: 'N/A');
 
         if (!empty($leadRequest->reference_company_url)) {
@@ -145,10 +148,6 @@ class GenerateLeadEmailContent implements ShouldQueue
             if ($content !== '') {
                 $parts[] = "\nReference company notes (scraped):\n" . mb_substr($content, 0, 800);
             }
-        }
-
-        if ($offer !== '') {
-            $parts[] = "\nOffer / what we want to pitch:\n" . $offer;
         }
 
         return mb_substr(implode("\n", $parts), 0, 2000);

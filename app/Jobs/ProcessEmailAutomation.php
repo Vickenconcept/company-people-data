@@ -88,7 +88,7 @@ class ProcessEmailAutomation implements ShouldQueue
                 $senderData = [
                     'name' => $sender?->name ?? '',
                     'email' => $sender?->email ?? '',
-                    'company_name' => config('app.name', 'Company'),
+                    'company_name' => '',
                     'from_name' => config('mail.from.name'),
                     'from_address' => config('mail.from.address'),
                 ];

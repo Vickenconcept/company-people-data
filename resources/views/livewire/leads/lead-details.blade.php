@@ -722,36 +722,46 @@
                     </button>
                 </div>
 
-                @if($emailTemplates->count() > 0)
-                    <div class="mb-4">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            Email Template (Optional)
-                        </label>
-                        <select 
-                            wire:model.live="selectedTemplateId"
-                            class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-orange-500 focus:outline-none"
-                        >
-                            <option value="">No Template</option>
-                            @foreach($emailTemplates as $template)
-                                <option value="{{ $template->id }}">{{ $template->name }}</option>
-                            @endforeach
-                        </select>
-                        <p class="text-xs text-gray-500 mt-1">Select a template to pre-fill context.</p>
-                    </div>
-                @endif
+                <details class="group mb-4 rounded-lg border border-gray-200 bg-gray-50/60 p-3" open>
+                    <summary class="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-gray-800 [&::-webkit-details-marker]:hidden">
+                        <span>Advanced Customization</span>
+                        <svg class="h-4 w-4 text-gray-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </summary>
+                    <div class="mt-3">
+                        @if($emailTemplates->count() > 0)
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Email Template (Optional)
+                                </label>
+                                <select 
+                                    wire:model.live="selectedTemplateId"
+                                    class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-orange-500 focus:outline-none"
+                                >
+                                    <option value="">No Template</option>
+                                    @foreach($emailTemplates as $template)
+                                        <option value="{{ $template->id }}">{{ $template->name }}</option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Select a template to pre-fill context.</p>
+                            </div>
+                        @endif
 
-                <div class="mb-4">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        Custom Context (Optional)
-                    </label>
-                    <textarea 
-                        wire:model="customContext"
-                        rows="4"
-                        class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-orange-500 focus:outline-none"
-                        placeholder="Add any custom context or instructions for the AI to use when generating emails..."
-                    ></textarea>
-                    <p class="text-xs text-gray-500 mt-1">This context will be used by AI to personalize all generated emails.</p>
-                </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Custom Context (Optional)
+                            </label>
+                            <textarea 
+                                wire:model="customContext"
+                                rows="4"
+                                class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-orange-500 focus:outline-none"
+                                placeholder="Add any custom context or instructions for the AI to use when generating emails..."
+                            ></textarea>
+                            <p class="text-xs text-gray-500 mt-1">This context will be used by AI to personalize all generated emails.</p>
+                        </div>
+                    </div>
+                </details>
 
                 <div class="flex justify-end gap-3">
                     <button 
@@ -964,34 +974,42 @@
                     >
                 </div>
 
-                <div class="mb-4">
-                    @if($emailTemplates->count() > 0)
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            Email Template (Optional)
-                        </label>
-                        <select
-                            wire:model.live="selectedTemplateId"
-                            class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-orange-500 focus:outline-none"
-                        >
-                            <option value="">No Template</option>
-                            @foreach($emailTemplates as $template)
-                                <option value="{{ $template->id }}">{{ $template->name }}</option>
-                            @endforeach
-                        </select>
-                        <p class="text-xs text-gray-500 mt-1">Selecting a template will pre-fill the context for regeneration.</p>
-                    @endif
+                <details class="group mb-4 rounded-lg border border-gray-200 bg-gray-50/60 p-3">
+                    <summary class="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-gray-800 [&::-webkit-details-marker]:hidden">
+                        <span>Advanced Customization</span>
+                        <svg class="h-4 w-4 text-gray-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </summary>
+                    <div class="mt-3">
+                        @if($emailTemplates->count() > 0)
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Email Template (Optional)
+                            </label>
+                            <select
+                                wire:model.live="selectedTemplateId"
+                                class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-orange-500 focus:outline-none"
+                            >
+                                <option value="">No Template</option>
+                                @foreach($emailTemplates as $template)
+                                    <option value="{{ $template->id }}">{{ $template->name }}</option>
+                                @endforeach
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1 mb-4">Selecting a template will pre-fill the context for regeneration.</p>
+                        @endif
 
-                    <label class="block text-sm font-semibold text-gray-700 mb-2 mt-4">
-                        Custom Context (Optional)
-                    </label>
-                    <textarea
-                        wire:model="customContext"
-                        rows="3"
-                        class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-orange-500 focus:outline-none"
-                        placeholder="Add any custom context or instructions for the AI to use when generating emails..."
-                    ></textarea>
-                    <p class="text-xs text-gray-500 mt-1">This context will be used when you click <strong>Regenerate Email</strong>.</p>
-                </div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Custom Context (Optional)
+                        </label>
+                        <textarea
+                            wire:model="customContext"
+                            rows="3"
+                            class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-orange-500 focus:outline-none"
+                            placeholder="Add any custom context or instructions for the AI to use when generating emails..."
+                        ></textarea>
+                        <p class="text-xs text-gray-500 mt-1">This context will be used when you click <strong>Regenerate Email</strong>.</p>
+                    </div>
+                </details>
 
                 <div class="mb-4">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Body</label>

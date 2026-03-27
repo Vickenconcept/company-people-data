@@ -33,8 +33,31 @@ function normalizeBodyToHtml(body) {
     const raw = String(body ?? '');
     const trimmed = raw.trim();
 
-    // If it's already HTML-ish, keep it. (Quill outputs HTML tags.)
+    if (trimmed === '') {
+        return '<p></p>';
+    }
+
+    // Handle older payloads that accidentally stored {"body":"..."} JSON text.
+    if (trimmed.startsWith('{') && trimmed.includes('"body"')) {
+        try {
+            const parsed = JSON.parse(trimmed);
+            return normalizeBodyToHtml(parsed?.body ?? '');
+        } catch {
+            // fall through
+        }
+    }
+
+    // If it's already HTML-ish, normalize full documents to body inner HTML.
     if (trimmed.includes('<') && trimmed.includes('>')) {
+        if (/<html[\s>]/i.test(trimmed) || /<body[\s>]/i.test(trimmed)) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(trimmed, 'text/html');
+            const bodyHtml = doc?.body?.innerHTML?.trim() ?? '';
+            if (bodyHtml !== '') {
+                return bodyHtml;
+            }
+        }
+
         return trimmed;
     }
 

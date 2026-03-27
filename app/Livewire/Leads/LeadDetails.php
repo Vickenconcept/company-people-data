@@ -251,7 +251,7 @@ class LeadDetails extends Component
             $senderData = [
                 'name' => $sender?->name ?? '',
                 'email' => $sender?->email ?? '',
-                'company_name' => config('app.name', 'Company'),
+                'company_name' => '',
                 'from_name' => config('mail.from.name'),
                 'from_address' => config('mail.from.address'),
             ];
@@ -259,7 +259,7 @@ class LeadDetails extends Component
             $emailResult = $openAIService->generateEmailContent(
                 $leadResult->person->toArray(),
                 $leadResult->company->toArray(),
-                $this->buildAiContext($this->customContext !== '' ? $this->customContext : ($this->viewingEmail->custom_context ?? null)),
+                $this->buildAiContext($this->customContext ?: null),
                 $senderData
             );
 
@@ -325,7 +325,7 @@ class LeadDetails extends Component
             $senderData = [
                 'name' => $sender?->name ?? '',
                 'email' => $sender?->email ?? '',
-                'company_name' => config('app.name', 'Company'),
+                'company_name' => '',
                 'from_name' => config('mail.from.name'),
                 'from_address' => config('mail.from.address'),
             ];
@@ -333,7 +333,7 @@ class LeadDetails extends Component
             $emailResult = $openAIService->generateEmailContent(
                 $leadResult->person->toArray(),
                 $leadResult->company->toArray(),
-                $this->buildAiContext($this->customContext ?: null),
+                $this->buildAiContext($this->customContext !== '' ? $this->customContext : ($this->viewingEmail->custom_context ?? null)),
                 $senderData
             );
 
@@ -618,7 +618,10 @@ class LeadDetails extends Component
 
         $parts = [];
 
-        $parts[] = "Campaign context:";
+        $parts[] = "Primary instruction from user/template:";
+        $parts[] = $offer !== '' ? $offer : 'No explicit instruction provided.';
+        $parts[] = "";
+        $parts[] = "Campaign background (supporting context only):";
         $parts[] = "- Reference company: " . ($lr->reference_company_name ?: 'N/A');
         if (!empty($lr->reference_company_url)) {
             $parts[] = "- Reference URL: " . $lr->reference_company_url;
@@ -649,10 +652,6 @@ class LeadDetails extends Component
             if ($content !== '') {
                 $parts[] = "\nReference company notes (scraped):\n" . mb_substr($content, 0, 800);
             }
-        }
-
-        if ($offer !== '') {
-            $parts[] = "\nOffer / what we want to pitch:\n" . $offer;
         }
 
         $context = implode("\n", $parts);
