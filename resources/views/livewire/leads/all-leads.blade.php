@@ -1,4 +1,11 @@
-<div class="space-y-6">
+<div
+    class="space-y-6"
+    @if($hasProcessingRequests)
+        wire:poll.6s
+    @elseif($hasActiveRequests)
+        wire:poll.20s
+    @endif
+>
     <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
             <h2 class="text-lg font-semibold text-slate-900">
@@ -7,8 +14,25 @@
             <p class="mt-1 text-sm text-slate-500">
                 {{ __('Every automated discovery job you have created, with full history and filters.') }}
             </p>
+            @if($hasProcessingRequests)
+                <p class="mt-1 text-xs text-slate-400">
+                    {{ __('Auto-refreshing every 6s while requests are actively processing.') }}
+                </p>
+            @elseif($hasActiveRequests)
+                <p class="mt-1 text-xs text-slate-400">
+                    {{ __('Auto-refreshing every 20s while requests are pending.') }}
+                </p>
+            @endif
         </div>
         <div class="flex flex-wrap gap-2">
+            <a
+                href="{{ route('leads.import') }}"
+                wire:navigate
+                class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium !text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50"
+            >
+                <flux:icon name="arrow-down-tray" class="size-4" />
+                <span>{{ __('Import Leads') }}</span>
+            </a>
             <a
                 href="{{ route('leads.export') }}"
                 class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium !text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50"

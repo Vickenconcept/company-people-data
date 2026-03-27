@@ -178,10 +178,21 @@
             <div class="flex flex-wrap gap-3">
                 <button 
                     type="submit"
-                    class="inline-flex items-center gap-2 rounded-full bg-orange-500 px-6 py-2 text-sm font-semibold text-white shadow-md shadow-orange-500/30 hover:bg-orange-600"
+                    wire:loading.attr="disabled"
+                    wire:target="create"
+                    class="inline-flex items-center gap-2 rounded-full bg-orange-500 px-6 py-2 text-sm font-semibold text-white shadow-md shadow-orange-500/30 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                    <flux:icon name="sparkles" class="size-4" />
-                    <span>{{ __('Create Lead Request') }}</span>
+                    <span wire:loading.remove wire:target="create" class="inline-flex items-center gap-2">
+                        <flux:icon name="sparkles" class="size-4" />
+                        <span>{{ __('Create Lead Request') }}</span>
+                    </span>
+                    <span wire:loading wire:target="create" class="inline-flex items-center gap-2">
+                        <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25" stroke-width="3"></circle>
+                            <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
+                        </svg>
+                        <span>{{ __('Creating...') }}</span>
+                    </span>
                 </button>
                 <a 
                     href="{{ route('leads.dashboard') }}" 

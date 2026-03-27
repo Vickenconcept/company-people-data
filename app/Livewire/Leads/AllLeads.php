@@ -3,6 +3,7 @@
 namespace App\Livewire\Leads;
 
 use App\Models\LeadRequest;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -19,6 +20,8 @@ class AllLeads extends Component
     public ?string $dateFrom = null;
     public ?string $dateTo = null;
     public array $stats = [];
+    public bool $hasActiveRequests = false;
+    public bool $hasProcessingRequests = false;
 
     public function toggleSelectAll(): void
     {
@@ -50,7 +53,7 @@ class AllLeads extends Component
 
     public function delete(int $id): void
     {
-        $leadRequest = LeadRequest::where('user_id', auth()->id())->findOrFail($id);
+        $leadRequest = LeadRequest::where('user_id', Auth::id())->findOrFail($id);
         $leadRequest->delete();
 
         $this->selected = array_diff($this->selected, [$id]);
@@ -64,7 +67,7 @@ class AllLeads extends Component
             return;
         }
 
-        $count = LeadRequest::where('user_id', auth()->id())
+        $count = LeadRequest::where('user_id', Auth::id())
             ->whereIn('id', $this->selected)
             ->delete();
 
@@ -109,22 +112,43 @@ class AllLeads extends Component
 
     protected function computeStats(): void
     {
-        $baseQuery = LeadRequest::where('user_id', auth()->id());
+        $userId = Auth::id();
+        $baseQuery = LeadRequest::where('user_id', $userId);
+
+        $statusCounts = LeadRequest::query()
+            ->where('user_id', $userId)
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $totals = LeadRequest::query()
+            ->where('user_id', $userId)
+            ->selectRaw('COUNT(*) as total, COALESCE(SUM(companies_found), 0) as total_companies, COALESCE(SUM(contacts_found), 0) as total_contacts')
+            ->first();
 
         $this->stats = [
-            'total' => $baseQuery->count(),
-            'completed' => $baseQuery->clone()->where('status', 'completed')->count(),
-            'processing' => $baseQuery->clone()->where('status', 'processing')->count(),
-            'pending' => $baseQuery->clone()->where('status', 'pending')->count(),
-            'failed' => $baseQuery->clone()->where('status', 'failed')->count(),
-            'total_companies' => $baseQuery->clone()->sum('companies_found'),
-            'total_contacts' => $baseQuery->clone()->sum('contacts_found'),
+            'total' => (int) ($totals->total ?? 0),
+            'completed' => (int) ($statusCounts['completed'] ?? 0),
+            'processing' => (int) ($statusCounts['processing'] ?? 0),
+            'pending' => (int) ($statusCounts['pending'] ?? 0),
+            'failed' => (int) ($statusCounts['failed'] ?? 0),
+            'total_companies' => (int) ($totals->total_companies ?? 0),
+            'total_contacts' => (int) ($totals->total_contacts ?? 0),
         ];
+
+        // Polling guard: only auto-refresh when there are in-flight jobs.
+        $this->hasProcessingRequests = $baseQuery
+            ->where('status', 'processing')
+            ->exists();
+
+        $this->hasActiveRequests = $baseQuery
+            ->whereIn('status', ['pending', 'processing'])
+            ->exists();
     }
 
     protected function buildBaseQuery()
     {
-        $query = LeadRequest::where('user_id', auth()->id());
+        $query = LeadRequest::where('user_id', Auth::id());
 
         if (!empty($this->search)) {
             $query->where(function ($q) {
