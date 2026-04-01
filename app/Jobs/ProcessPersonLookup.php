@@ -66,25 +66,51 @@ class ProcessPersonLookup implements ShouldQueue
                 return;
             }
 
-            $people = $peopleSearchService->storePeople($peopleResult['people']);
+            $peopleWithEmail = array_values(array_filter(
+                $peopleResult['people'] ?? [],
+                fn (array $person): bool => !empty(trim((string) ($person['email'] ?? '')))
+            ));
 
-            foreach ($people as $person) {
-                LeadResult::create([
+            if (empty($peopleWithEmail)) {
+                Log::info('ℹ️ ProcessPersonLookup: No contact with email found', [
                     'lead_request_id' => $this->leadRequest->id,
                     'company_id' => $this->company->id,
-                    'person_id' => $person->id,
-                    'similarity_score' => null, // Could calculate with embeddings
-                    'status' => 'pending',
                 ]);
+                return;
             }
 
+            // Keep exactly one contact per company: the first matching person with an email.
+            $person = $peopleSearchService->storePeople([$peopleWithEmail[0]])[0] ?? null;
+
+            if (!$person) {
+                Log::warning('⚠️ ProcessPersonLookup: Failed to store selected contact', [
+                    'lead_request_id' => $this->leadRequest->id,
+                    'company_id' => $this->company->id,
+                ]);
+                return;
+            }
+
+            $leadResult = LeadResult::updateOrCreate(
+                [
+                    'lead_request_id' => $this->leadRequest->id,
+                    'company_id' => $this->company->id,
+                ],
+                [
+                    'person_id' => $person->id,
+                    'similarity_score' => null,
+                    'status' => 'pending',
+                ]
+            );
+
             // Update lead request counts
-            $this->leadRequest->increment('contacts_found', count($people));
+            if ($leadResult->wasRecentlyCreated) {
+                $this->leadRequest->increment('contacts_found', 1);
+            }
 
             Log::info('🎉 ProcessPersonLookup Completed', [
                 'lead_request_id' => $this->leadRequest->id,
                 'company_id' => $this->company->id,
-                'contacts_found' => count($people),
+                'contacts_found' => $leadResult->wasRecentlyCreated ? 1 : 0,
             ]);
 
         } catch (\Exception $e) {
