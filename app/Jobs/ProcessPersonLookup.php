@@ -38,7 +38,7 @@ class ProcessPersonLookup implements ShouldQueue
             $peopleResult = $peopleSearchService->findPeople(
                 $this->company,
                 $jobTitles,
-                5 // Limit per company
+                1 // Keep API usage minimal: one contact per company
             );
             
             // If Apollo failed and we have a Hunter API key, try Hunter.io
@@ -49,7 +49,7 @@ class ProcessPersonLookup implements ShouldQueue
                 $hunterResult = $hunterService->findPeople(
                     $this->company,
                     $jobTitles,
-                    5
+                    1
                 );
                 
                 if ($hunterResult['success']) {

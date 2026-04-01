@@ -118,11 +118,12 @@ class PeopleSearchService
     {
         try {
             $people = [];
+            $perTitleLimit = max(1, min($limit, 1));
 
             foreach ($jobTitles as $title) {
                 $query = [
                     'page' => 1,
-                    'per_page' => $limit,
+                    'per_page' => $perTitleLimit,
                 ];
 
                 // Use organization domain or name if we don't have an Apollo org ID
@@ -157,6 +158,19 @@ class PeopleSearchService
                             }
                         }
                         $people[] = $this->mapApolloPerson($personData, $company->id);
+                    }
+
+                    // Stop early once we have one contact with an email.
+                    $firstWithEmail = array_values(array_filter(
+                        $people,
+                        fn (array $person): bool => !empty(trim((string) ($person['email'] ?? '')))
+                    ));
+
+                    if (!empty($firstWithEmail)) {
+                        return [
+                            'success' => true,
+                            'people' => [array_slice($firstWithEmail, 0, 1)[0]],
+                        ];
                     }
                 } else {
                     $responseBody = $response->json();
@@ -193,9 +207,14 @@ class PeopleSearchService
             // For contacts still missing email, try Hunter.io email finder
             $people = $this->enrichEmailsWithHunter($people, $company);
 
+            $peopleWithEmail = array_values(array_filter(
+                $people,
+                fn (array $person): bool => !empty(trim((string) ($person['email'] ?? '')))
+            ));
+
             return [
                 'success' => true,
-                'people' => array_slice($people, 0, $limit),
+                'people' => array_slice($peopleWithEmail, 0, 1),
             ];
         } catch (\Exception $e) {
             Log::error('❌ PeopleSearchService: Apollo Exception', [
@@ -219,6 +238,7 @@ class PeopleSearchService
     {
         try {
             $people = [];
+            $perTitleLimit = max(1, min($limit, 1));
 
             // Clean domain (remove www. if present)
             $domain = $company->domain;
@@ -233,7 +253,7 @@ class PeopleSearchService
                 $queryParams = [
                     'api_key' => $this->apiKey,
                     'domain' => $domain,
-                    'limit' => $limit,
+                    'limit' => $perTitleLimit,
                 ];
                 
                 // Only add seniority if it's a valid value (not 'employee')
@@ -266,6 +286,13 @@ class PeopleSearchService
                                 str_contains($searchTitle, $personTitle) ||
                                 (strlen($searchTitle) <= 3 && !empty($personTitle))) {
                                 $people[] = $this->mapHunterPerson($emailData, $company->id);
+
+                                if (!empty(trim((string) ($emailData['value'] ?? '')))) {
+                                    return [
+                                        'success' => true,
+                                        'people' => [array_slice($people, 0, 1)[0]],
+                                    ];
+                                }
                             }
                         }
                     } else {
@@ -290,7 +317,7 @@ class PeopleSearchService
 
             return [
                 'success' => true,
-                'people' => array_slice($people, 0, $limit),
+                'people' => array_slice($people, 0, 1),
             ];
         } catch (\Exception $e) {
             Log::error('❌ PeopleSearchService: Hunter.io Exception', [
