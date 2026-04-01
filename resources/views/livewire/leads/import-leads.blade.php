@@ -97,27 +97,5 @@
             </div>
         @endif
 
-        <!-- Dropify assets (using working URLs) -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-        <script src="https://jeremyfagis.github.io/dropify/dist/js/dropify.min.js" type="text/javascript"></script>
-        <link rel="stylesheet" type="text/css" href="https://jeremyfagis.github.io/dropify/dist/css/dropify.min.css">
-        <script>
-            function initDropify() {
-                if (window.jQuery && $('.dropify').length) {
-                    $('.dropify').dropify();
-                }
-            }
-
-            document.addEventListener('DOMContentLoaded', initDropify);
-
-            document.addEventListener('livewire:load', function () {
-                initDropify();
-                if (window.Livewire && window.Livewire.hook) {
-                    window.Livewire.hook('message.processed', function () {
-                        initDropify();
-                    });
-                }
-            });
-        </script>
     </div>
 </div>

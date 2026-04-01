@@ -97,6 +97,8 @@ let syncFromServer = null;
 let lastStateBodyHtml = null;
 let contentAutosaveTimer = null;
 let isSyncingFromServer = false;
+let quillObserver = null;
+let dropifyAssetsPromise = null;
 
 function mountOrSyncLeadEmailQuill() {
     const editorEl = document.getElementById('lead-email-quill-editor');
@@ -177,15 +179,111 @@ function mountOrSyncLeadEmailQuill() {
     quillApp.mount(editorEl);
 }
 
-// Observe DOM changes so we mount when the modal opens.
-const observer = new MutationObserver(() => {
+function mountOrSyncLeadEmailQuillDebounced() {
     // Lightweight debounce for rapid Livewire updates.
     clearTimeout(window.__leadEmailQuillDebounce);
     window.__leadEmailQuillDebounce = setTimeout(mountOrSyncLeadEmailQuill, 50);
-});
+}
 
-observer.observe(document.body, { childList: true, subtree: true });
+function setupLeadEmailQuillObserver() {
+    if (quillObserver) {
+        quillObserver.disconnect();
+    }
 
-// Initial attempt (in case modal is already open on first load).
-mountOrSyncLeadEmailQuill();
+    quillObserver = new MutationObserver(mountOrSyncLeadEmailQuillDebounced);
+    quillObserver.observe(document.body, { childList: true, subtree: true });
+
+    // Initial attempt (in case modal is already open on first load).
+    mountOrSyncLeadEmailQuill();
+}
+
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        const existing = document.querySelector(`script[src="${src}"]`);
+        if (existing) {
+            if (existing.dataset.loaded === 'true') {
+                resolve();
+                return;
+            }
+
+            existing.addEventListener('load', () => {
+                existing.dataset.loaded = 'true';
+                resolve();
+            }, { once: true });
+
+            existing.addEventListener('error', () => reject(new Error(`Failed to load script: ${src}`)), { once: true });
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = true;
+        script.addEventListener('load', () => {
+            script.dataset.loaded = 'true';
+            resolve();
+        }, { once: true });
+        script.addEventListener('error', () => reject(new Error(`Failed to load script: ${src}`)), { once: true });
+        document.head.appendChild(script);
+    });
+}
+
+function ensureStylesheet(href) {
+    if (document.querySelector(`link[href="${href}"]`)) {
+        return;
+    }
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    document.head.appendChild(link);
+}
+
+function ensureDropifyAssets() {
+    if (dropifyAssetsPromise) {
+        return dropifyAssetsPromise;
+    }
+
+    ensureStylesheet('https://jeremyfagis.github.io/dropify/dist/css/dropify.min.css');
+
+    dropifyAssetsPromise = loadScript('https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js')
+        .then(() => loadScript('https://jeremyfagis.github.io/dropify/dist/js/dropify.min.js'));
+
+    return dropifyAssetsPromise;
+}
+
+function initDropify() {
+    const fileInputs = document.querySelectorAll('.dropify');
+    if (!fileInputs.length) {
+        return;
+    }
+
+    ensureDropifyAssets()
+        .then(() => {
+            const $ = window.jQuery;
+            if (!$ || typeof $.fn.dropify !== 'function') {
+                return;
+            }
+
+            $('.dropify').each(function initOne() {
+                const existing = $(this).data('dropify');
+                if (existing && typeof existing.destroy === 'function') {
+                    existing.destroy();
+                }
+            });
+
+            $('.dropify').dropify();
+        })
+        .catch(() => {
+            // Keep page functional even if Dropify CDN fails.
+        });
+}
+
+function bootstrapPageIntegrations() {
+    setupLeadEmailQuillObserver();
+    initDropify();
+}
+
+document.addEventListener('DOMContentLoaded', bootstrapPageIntegrations);
+document.addEventListener('livewire:initialized', bootstrapPageIntegrations);
+document.addEventListener('livewire:navigated', bootstrapPageIntegrations);
 
