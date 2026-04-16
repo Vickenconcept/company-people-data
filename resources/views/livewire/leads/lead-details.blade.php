@@ -1,10 +1,10 @@
 <div class="space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div class="flex items-start gap-3">
-            <a 
+            <a
                 href="{{ route('leads.dashboard') }}" 
                 wire:navigate
-                class="flex items-center justify-center w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-600 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 transition-all shadow-sm cursor-pointer no-underline"
+                class="flex items-center justify-center w-10 h-10 rounded-2xl bg-white border border-violet-100 text-slate-600 hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700 transition-all shadow-sm cursor-pointer no-underline"
             >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
@@ -19,7 +19,7 @@
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-100 shadow-sm p-5">
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-50 to-white border border-violet-100/70 shadow-sm p-5">
             <div class="relative z-10">
                 <div class="flex items-center gap-2 mb-1">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
@@ -29,17 +29,17 @@
                 <p class="text-xs text-slate-500 mt-1.5">companies requested</p>
             </div>
         </div>
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-50 to-white border border-orange-100 shadow-sm p-5">
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-50 to-white border border-violet-100 shadow-sm p-5">
             <div class="relative z-10">
                 <div class="flex items-center gap-2 mb-1">
-                    <svg class="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                    <span class="text-xs font-semibold text-orange-500 uppercase tracking-wider">Companies</span>
+                    <svg class="w-4 h-4 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    <span class="text-xs font-semibold text-violet-600 uppercase tracking-wider">Companies</span>
                 </div>
-                <div class="text-3xl font-bold text-orange-600">{{ $leadRequest->companies_found }}</div>
+                <div class="text-3xl font-bold text-violet-700">{{ $leadRequest->companies_found }}</div>
                 <p class="text-xs text-slate-500 mt-1.5">discovered</p>
             </div>
         </div>
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-100 shadow-sm p-5">
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-50 to-white border border-violet-100/70 shadow-sm p-5">
             <div class="relative z-10">
                 <div class="flex items-center gap-2 mb-1">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -49,7 +49,7 @@
                 <p class="text-xs text-slate-500 mt-1.5">people found</p>
             </div>
         </div>
-        <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm p-5">
+        <div class="relative overflow-hidden rounded-3xl bg-white border border-violet-100/70 shadow-sm p-5">
             <div class="relative z-10">
                 @php
                     $statusConfig = [
@@ -72,7 +72,7 @@
     </div>
     
     <!-- Campaign Details -->
-    <div class="rounded-2xl border border-slate-100 bg-white shadow-sm">
+    <div class="rounded-3xl border border-violet-100/80 bg-white shadow-sm">
         <div class="px-6 py-4 border-b border-slate-100">
             <h2 class="text-sm font-semibold text-slate-700">Campaign Details</h2>
         </div>
@@ -80,7 +80,7 @@
             @if($leadRequest->reference_company_url)
                 <div>
                     <div class="text-xs text-slate-400 font-medium mb-2">Reference URL</div>
-                    <a href="{{ $leadRequest->reference_company_url }}" target="_blank" class="inline-flex items-center gap-1.5 text-sm font-medium text-orange-600 hover:text-orange-700 transition-colors no-underline">
+                    <a href="{{ $leadRequest->reference_company_url }}" target="_blank" class="inline-flex items-center gap-1.5 text-sm font-medium text-violet-700 hover:text-violet-800 transition-colors no-underline">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                         {{ parse_url($leadRequest->reference_company_url, PHP_URL_HOST) ?? $leadRequest->reference_company_url }}
                     </a>
@@ -90,7 +90,7 @@
                 <div class="text-xs text-slate-400 font-medium mb-2">Target Job Titles</div>
                 <div class="flex flex-wrap gap-2">
                     @foreach($leadRequest->target_job_titles ?? [] as $title)
-                        <span class="px-3 py-1.5 rounded-full bg-orange-50 text-orange-700 text-xs font-medium border border-orange-100">{{ $title }}</span>
+                        <span class="px-3 py-1.5 rounded-full bg-violet-50 text-violet-700 text-xs font-medium border border-violet-100">{{ $title }}</span>
                     @endforeach
                 </div>
             </div>
@@ -108,7 +108,7 @@
 
     <!-- ICP Profile & Search Criteria -->
     @if($leadRequest->icp_profile || $leadRequest->search_criteria)
-        <div class="rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
+        <div class="rounded-3xl border border-violet-100/80 bg-white shadow-sm overflow-hidden">
             <div class="px-6 py-4 bg-gradient-to-r from-violet-500 to-purple-600 flex items-center justify-between">
                 <div class="flex items-center gap-2 text-white">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
@@ -191,22 +191,22 @@
         <!-- Tab Headers -->
         <div class="border-b border-slate-100">
             <div class="flex gap-1 px-6">
-                <button 
+                <button
                     wire:click="setTab('contacts')"
-                    class="px-6 py-4 text-sm font-semibold transition-all relative cursor-pointer {{ $activeTab === 'contacts' ? 'text-orange-600' : 'text-slate-500 hover:text-slate-900' }}"
+                    class="px-6 py-4 text-sm font-semibold transition-all relative cursor-pointer {{ $activeTab === 'contacts' ? 'text-violet-700' : 'text-slate-500 hover:text-slate-900' }}"
                 >
                     Contacts ({{ $results->total() }})
                     @if($activeTab === 'contacts')
-                        <span class="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full"></span>
+                        <span class="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-violet-400 to-violet-700 rounded-full"></span>
                     @endif
                 </button>
-                <button 
+                <button
                     wire:click="setTab('companies')"
-                    class="px-6 py-4 text-sm font-semibold transition-all relative cursor-pointer {{ $activeTab === 'companies' ? 'text-orange-600' : 'text-slate-500 hover:text-slate-900' }}"
+                    class="px-6 py-4 text-sm font-semibold transition-all relative cursor-pointer {{ $activeTab === 'companies' ? 'text-violet-700' : 'text-slate-500 hover:text-slate-900' }}"
                 >
                     Companies ({{ $companies->count() }})
                     @if($activeTab === 'companies')
-                        <span class="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full"></span>
+                        <span class="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-violet-400 to-violet-700 rounded-full"></span>
                     @endif
                 </button>
             </div>
@@ -221,7 +221,7 @@
                     @if($filterStatus || $filterIndustry || $filterJobTitle || $filterHasEmail !== null || $filterHasGeneratedEmail !== null || $filterTagId)
                         <button 
                             wire:click="clearFilters"
-                            class="text-xs text-orange-600 hover:text-orange-700 font-medium cursor-pointer transition-colors"
+                            class="text-xs text-violet-700 hover:text-violet-800 font-medium cursor-pointer transition-colors"
                         >
                             Clear All
                         </button>
@@ -232,7 +232,7 @@
                         <label class="block text-xs font-medium text-slate-500 mb-1.5">Status</label>
                         <select 
                             wire:model.live="filterStatus"
-                            class="w-full text-sm rounded-lg border border-slate-200 bg-white px-3 py-2 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-colors"
+                            class="w-full text-sm rounded-lg border border-violet-100 bg-white px-3 py-2 focus:border-violet-500 focus:ring-1 focus:ring-violet-400 focus:outline-none transition-colors"
                         >
                             <option value="">All</option>
                             <option value="pending">Pending</option>
@@ -246,7 +246,7 @@
                         <label class="block text-xs font-medium text-slate-500 mb-1.5">Industry</label>
                         <select 
                             wire:model.live="filterIndustry"
-                            class="w-full text-sm rounded-lg border border-slate-200 bg-white px-3 py-2 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-colors"
+                            class="w-full text-sm rounded-lg border border-violet-100 bg-white px-3 py-2 focus:border-violet-500 focus:ring-1 focus:ring-violet-400 focus:outline-none transition-colors"
                         >
                             <option value="">All Industries</option>
                             @foreach($industries as $industry)
@@ -258,7 +258,7 @@
                         <label class="block text-xs font-medium text-slate-500 mb-1.5">Job Title</label>
                         <select 
                             wire:model.live="filterJobTitle"
-                            class="w-full text-sm rounded-lg border border-slate-200 bg-white px-3 py-2 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-colors"
+                            class="w-full text-sm rounded-lg border border-violet-100 bg-white px-3 py-2 focus:border-violet-500 focus:ring-1 focus:ring-violet-400 focus:outline-none transition-colors"
                         >
                             <option value="">All Titles</option>
                             @foreach($jobTitles as $title)
@@ -270,7 +270,7 @@
                         <label class="block text-xs font-medium text-slate-500 mb-1.5">Has Email</label>
                         <select 
                             wire:model.live="filterHasEmail"
-                            class="w-full text-sm rounded-lg border border-slate-200 bg-white px-3 py-2 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-colors"
+                            class="w-full text-sm rounded-lg border border-violet-100 bg-white px-3 py-2 focus:border-violet-500 focus:ring-1 focus:ring-violet-400 focus:outline-none transition-colors"
                         >
                             <option value="">All</option>
                             <option value="1">Yes</option>
@@ -282,7 +282,7 @@
                         <label class="block text-xs font-medium text-slate-500 mb-1.5">Tag</label>
                         <select 
                             wire:model.live="filterTagId"
-                            class="w-full text-sm rounded-lg border border-slate-200 bg-white px-3 py-2 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-colors"
+                            class="w-full text-sm rounded-lg border border-violet-100 bg-white px-3 py-2 focus:border-violet-500 focus:ring-1 focus:ring-violet-400 focus:outline-none transition-colors"
                         >
                             <option value="">All Tags</option>
                             @foreach($tags as $tag)
@@ -315,7 +315,7 @@
                         wire:click="selectAll"
                         title="Select all contacts with email"
                         aria-label="Select all contacts with email"
-                        class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 transition-colors cursor-pointer"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700 transition-colors cursor-pointer"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12h16M4 6h16M4 18h16"/></svg>
                     </button>
@@ -337,7 +337,7 @@
                         @if(empty($selectedLeadResults)) disabled @endif
                         title="Draft selected emails with AI"
                         aria-label="Draft selected emails with AI"
-                        class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 disabled:from-slate-300 disabled:to-slate-300 disabled:cursor-not-allowed transition-all shadow-sm cursor-pointer"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-r from-violet-500 to-violet-700 text-white hover:from-violet-600 hover:to-violet-800 disabled:from-slate-300 disabled:to-slate-300 disabled:cursor-not-allowed transition-all shadow-sm cursor-pointer"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
                     </button>
@@ -440,7 +440,7 @@
                                                 type="checkbox" 
                                                 wire:click="toggleSelect({{ $result->id }})"
                                                 @if($isSelected) checked @endif
-                                                class="w-4 h-4 rounded border-2 border-slate-300 text-orange-600 focus:ring-2 focus:ring-orange-500 focus:ring-offset-1 cursor-pointer transition-all"
+                                                class="w-4 h-4 rounded border-2 border-slate-300 text-purple-600 focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 cursor-pointer transition-all"
                                             >
                                         @endif
                                     </td>
@@ -448,7 +448,7 @@
                                     <!-- Company Column -->
                                     <td class="px-4 py-3 align-top">
                                         <div class="flex items-start gap-2.5">
-                                            <div class="flex-shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                                            <div class="flex-shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-purple-400 to-purple-500 flex items-center justify-center text-white font-bold text-xs shadow-sm">
                                                 {{ strtoupper(substr($result->company->name, 0, 1)) }}
                                             </div>
                                             <div class="flex-1 min-w-0">
@@ -508,7 +508,7 @@
                                                 </span>
                                                 <select 
                                                     wire:change="updateLeadStatus({{ $result->id }}, $event.target.value)"
-                                                    class="text-xs border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 bg-white hover:bg-slate-50 cursor-pointer transition-colors flex-shrink-0"
+                            class="text-xs border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/20 bg-white hover:bg-slate-50 cursor-pointer transition-colors flex-shrink-0"
                                                 >
                                                     <option value="pending" {{ $result->status === 'pending' ? 'selected' : '' }}>Pending</option>
                                                     <option value="contacted" {{ $result->status === 'contacted' ? 'selected' : '' }}>Contacted</option>
@@ -548,7 +548,7 @@
                                             
                                             <button 
                                                 wire:click="openTagsModal({{ $result->id }})"
-                                                class="inline-flex items-center gap-1 text-xs font-medium text-orange-600 hover:text-orange-700 cursor-pointer transition-colors"
+                                                class="inline-flex items-center gap-1 text-xs font-medium text-violet-700 hover:text-violet-800 cursor-pointer transition-colors"
                                             >
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
                                                 {{ $result->tags->count() > 0 ? 'Edit' : 'Add' }}
@@ -560,8 +560,8 @@
                                     <td class="px-4 py-3 align-top">
                                         <div class="flex items-center gap-2 flex-nowrap">
                                             @if($isGenerating)
-                                            <div class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-orange-50 border border-orange-200">
-                                                <svg class="animate-spin h-3.5 w-3.5 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <div class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-violet-50 border border-violet-200">
+                                                <svg class="animate-spin h-3.5 w-3.5 text-violet-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                 </svg>
@@ -590,7 +590,7 @@
                                                 wire:loading.attr="disabled"
                                                 title="Draft email with AI"
                                                 aria-label="Draft email with AI"
-                                                class="inline-flex h-8 w-8 items-center justify-center text-xs font-semibold bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full hover:from-orange-600 hover:to-orange-700 hover:shadow active:scale-95 disabled:from-slate-300 disabled:to-slate-300 disabled:cursor-not-allowed transition-all cursor-pointer"
+                                                class="inline-flex h-8 w-8 items-center justify-center text-xs font-semibold bg-gradient-to-r from-violet-500 to-violet-700 text-white rounded-full hover:from-violet-600 hover:to-violet-800 hover:shadow active:scale-95 disabled:from-slate-300 disabled:to-slate-300 disabled:cursor-not-allowed transition-all cursor-pointer"
                                             >
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
                                             </button>
@@ -647,11 +647,11 @@
                                         ->where('company_id', $company->id)
                                         ->count();
                                 @endphp
-                                <tr class="border-b border-slate-100 hover:bg-orange-50/30 transition-colors bg-white">
+                                <tr class="border-b border-slate-100 hover:bg-violet-50/30 transition-colors bg-white">
                                     <td class="px-6 py-4">
                                         <div class="font-semibold text-slate-900">{{ $company->name }}</div>
                                         @if($company->website)
-                                            <a href="{{ $company->website }}" target="_blank" class="text-xs text-orange-600 hover:text-orange-700 font-medium cursor-pointer transition-colors no-underline">
+                                            <a href="{{ $company->website }}" target="_blank" class="text-xs text-violet-700 hover:text-violet-800 font-medium cursor-pointer transition-colors no-underline">
                                                 Visit Website →
                                             </a>
                                         @endif
@@ -661,7 +661,7 @@
                                     </td>
                                     <td class="px-6 py-4">
                                         @if($company->domain)
-                                            <a href="https://{{ $company->domain }}" target="_blank" class="text-orange-600 hover:text-orange-700 font-medium text-sm cursor-pointer transition-colors no-underline">
+                                            <a href="https://{{ $company->domain }}" target="_blank" class="text-violet-700 hover:text-violet-800 font-medium text-sm cursor-pointer transition-colors no-underline">
                                                 {{ $company->domain }}
                                             </a>
                                         @else
@@ -686,7 +686,7 @@
                                     </td>
                                     <td class="px-6 py-4">
                                         @if($contactsCount > 0)
-                                            <span class="inline-flex rounded-full bg-orange-50 border border-orange-100 px-3 py-1.5 text-xs font-semibold text-orange-700">
+                                            <span class="inline-flex rounded-full bg-violet-50 border border-violet-100 px-3 py-1.5 text-xs font-semibold text-violet-700">
                                                 {{ $contactsCount }} {{ $contactsCount === 1 ? 'contact' : 'contacts' }}
                                             </span>
                                         @else
@@ -712,53 +712,53 @@
     <!-- Generate Emails Modal -->
     @if($showGenerateModal)
         <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" wire:click="closeGenerateModal">
-            <div class="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto" wire:click.stop>
+            <div class="bg-white rounded-3xl p-6 max-w-2xl w-full mx-4 max-h-[88vh] overflow-y-auto shadow-2xl" wire:click.stop>
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-2xl font-bold text-gray-900">Generate Emails</h2>
-                    <button wire:click="closeGenerateModal" class="text-gray-400 hover:text-gray-600 cursor-pointer">
+                    <h2 class="text-2xl font-bold text-slate-900">Generate Emails</h2>
+                    <button wire:click="closeGenerateModal" class="text-slate-400 hover:text-slate-600 cursor-pointer">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
 
-                <details class="group mb-4 rounded-lg border border-gray-200 bg-gray-50/60 p-3" open>
-                    <summary class="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-gray-800 [&::-webkit-details-marker]:hidden">
+                <details class="group mb-4 rounded-2xl border border-violet-100 bg-violet-50/40 p-3" open>
+                    <summary class="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-slate-800 [&::-webkit-details-marker]:hidden">
                         <span>Advanced Customization</span>
-                        <svg class="h-4 w-4 text-gray-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-4 w-4 text-slate-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                     </summary>
                     <div class="mt-3">
                         @if($emailTemplates->count() > 0)
                             <div class="mb-4">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
                                     Email Template (Optional)
                                 </label>
                                 <select 
                                     wire:model.live="selectedTemplateId"
-                                    class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-orange-500 focus:outline-none"
+                                    class="w-full rounded-2xl border border-violet-200 bg-violet-50/40 px-4 py-2.5 text-sm text-slate-900 focus:border-violet-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/20"
                                 >
                                     <option value="">No Template</option>
                                     @foreach($emailTemplates as $template)
                                         <option value="{{ $template->id }}">{{ $template->name }}</option>
                                     @endforeach
                                 </select>
-                                <p class="text-xs text-gray-500 mt-1">Select a template to pre-fill context.</p>
+                                <p class="text-xs text-slate-500 mt-1">Select a template to pre-fill context.</p>
                             </div>
                         @endif
 
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
                                 Custom Context (Optional)
                             </label>
                             <textarea 
                                 wire:model="customContext"
                                 rows="4"
-                                class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-orange-500 focus:outline-none"
+                                class="w-full rounded-2xl border border-violet-200 bg-violet-50/40 p-3 text-sm text-slate-900 focus:border-violet-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/20"
                                 placeholder="Add any custom context or instructions for the AI to use when generating emails..."
                             ></textarea>
-                            <p class="text-xs text-gray-500 mt-1">This context will be used by AI to personalize all generated emails.</p>
+                            <p class="text-xs text-slate-500 mt-1">This context will be used by AI to personalize all generated emails.</p>
                         </div>
                     </div>
                 </details>
@@ -766,14 +766,14 @@
                 <div class="flex justify-end gap-3">
                     <button 
                         wire:click="closeGenerateModal"
-                        class="px-4 py-2 text-sm font-semibold bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer"
+                        class="px-4 py-2 text-sm font-semibold bg-white border border-violet-100 text-slate-700 rounded-2xl hover:bg-violet-50/40 cursor-pointer"
                     >
                         Cancel
                     </button>
                     <button 
                         wire:click="startGenerating"
                         wire:loading.attr="disabled"
-                        class="px-4 py-2 text-sm font-semibold bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-300 cursor-pointer"
+                        class="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-[#8f47f2] to-[#5d30dc] text-white rounded-2xl hover:opacity-95 disabled:bg-gray-300 cursor-pointer"
                     >
                         Start Generating
                     </button>
@@ -785,10 +785,10 @@
     <!-- Queue Emails Confirmation Modal -->
     @if($showQueueModal)
         <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" wire:click="closeQueueModal">
-            <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4" wire:click.stop>
+            <div class="bg-white rounded-3xl p-6 max-w-xl w-full mx-4 shadow-2xl" wire:click.stop>
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-2xl font-bold text-gray-900">Queue Emails for Sending</h2>
-                    <button wire:click="closeQueueModal" class="text-gray-400 hover:text-gray-600 cursor-pointer">
+                    <h2 class="text-2xl font-bold text-slate-900">Queue Emails for Sending</h2>
+                    <button wire:click="closeQueueModal" class="text-slate-400 hover:text-slate-600 cursor-pointer">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -801,7 +801,7 @@
                         ->whereHas('generatedEmail')
                         ->count();
                 @endphp
-                <p class="text-gray-700 mb-4">
+                <p class="text-slate-700 mb-4">
                     Are you sure you want to queue <strong>{{ $selectedWithEmails }} email(s)</strong> for sending? 
                     They will be sent in the background.
                 </p>
@@ -809,14 +809,14 @@
                 <div class="flex justify-end gap-3">
                     <button 
                         wire:click="closeQueueModal"
-                        class="px-4 py-2 text-sm font-semibold bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer"
+                        class="px-4 py-2 text-sm font-semibold bg-white border border-violet-100 text-slate-700 rounded-2xl hover:bg-violet-50/40 cursor-pointer"
                     >
                         Cancel
                     </button>
                     <button 
                         wire:click="queueSelectedEmails"
                         wire:loading.attr="disabled"
-                        class="px-4 py-2 text-sm font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 cursor-pointer"
+                        class="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-2xl hover:opacity-95 disabled:bg-gray-300 cursor-pointer"
                     >
                         <span wire:loading.remove>Queue & Send</span>
                         <span wire:loading>Queueing...</span>
@@ -829,17 +829,17 @@
     <!-- Mass Send Confirmation Modal -->
     @if($showMassSendModal)
         <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" wire:click="closeMassSendModal">
-            <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4" wire:click.stop>
+            <div class="bg-white rounded-3xl p-6 max-w-xl w-full mx-4 shadow-2xl" wire:click.stop>
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-2xl font-bold text-gray-900">Mass Send Generated Emails</h2>
-                    <button wire:click="closeMassSendModal" class="text-gray-400 hover:text-gray-600 cursor-pointer">
+                    <h2 class="text-2xl font-bold text-slate-900">Mass Send Generated Emails</h2>
+                    <button wire:click="closeMassSendModal" class="text-slate-400 hover:text-slate-600 cursor-pointer">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
 
-                <p class="text-gray-700 mb-4">
+                <p class="text-slate-700 mb-4">
                     Queue and send <strong>{{ $massSendCount }} generated email(s)</strong> for this campaign?
                     Jobs are automatically staggered to reduce rate-limit risk.
                 </p>
@@ -847,14 +847,14 @@
                 <div class="flex justify-end gap-3">
                     <button 
                         wire:click="closeMassSendModal"
-                        class="px-4 py-2 text-sm font-semibold bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer"
+                        class="px-4 py-2 text-sm font-semibold bg-white border border-violet-100 text-slate-700 rounded-2xl hover:bg-violet-50/40 cursor-pointer"
                     >
                         Cancel
                     </button>
                     <button 
                         wire:click="massSendGeneratedEmails"
                         wire:loading.attr="disabled"
-                        class="px-4 py-2 text-sm font-semibold bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:bg-gray-300 cursor-pointer"
+                        class="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-2xl hover:opacity-95 disabled:bg-gray-300 cursor-pointer"
                     >
                         <span wire:loading.remove wire:target="massSendGeneratedEmails">Mass Send</span>
                         <span wire:loading wire:target="massSendGeneratedEmails">Queueing...</span>
@@ -867,10 +867,10 @@
     <!-- Queued Emails Modal -->
     @if($showQueuedEmailsModal)
         <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" wire:click="closeQueuedEmailsModal">
-            <div class="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto" wire:click.stop>
+            <div class="bg-white rounded-3xl p-6 max-w-3xl w-full mx-4 max-h-[88vh] overflow-y-auto shadow-2xl" wire:click.stop>
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-2xl font-bold text-gray-900">Queued Emails</h2>
-                    <button wire:click="closeQueuedEmailsModal" class="text-gray-400 hover:text-gray-600 cursor-pointer">
+                    <h2 class="text-2xl font-bold text-slate-900">Queued Emails</h2>
+                    <button wire:click="closeQueuedEmailsModal" class="text-slate-400 hover:text-slate-600 cursor-pointer">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -881,12 +881,12 @@
                     <div class="overflow-x-auto">
                         <table class="w-full">
                             <thead>
-                                <tr class="border-b-2 border-gray-300 bg-gray-50">
-                                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900">To</th>
-                                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900">Subject</th>
-                                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
-                                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900">Queued At</th>
-                                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-900">Sent At</th>
+                                <tr class="border-b border-violet-100 bg-violet-50/50">
+                                    <th class="px-4 py-3 text-left text-sm font-semibold text-slate-900">To</th>
+                                    <th class="px-4 py-3 text-left text-sm font-semibold text-slate-900">Subject</th>
+                                    <th class="px-4 py-3 text-left text-sm font-semibold text-slate-900">Status</th>
+                                    <th class="px-4 py-3 text-left text-sm font-semibold text-slate-900">Queued At</th>
+                                    <th class="px-4 py-3 text-left text-sm font-semibold text-slate-900">Sent At</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -898,15 +898,15 @@
                                             'failed' => 'bg-red-100 text-red-800',
                                         ];
                                     @endphp
-                                    <tr class="border-b border-gray-200">
+                                    <tr class="border-b border-slate-100">
                                         <td class="px-4 py-3">
-                                            <div class="font-medium text-gray-900">{{ $queuedEmail->to_email }}</div>
+                                            <div class="font-medium text-slate-900">{{ $queuedEmail->to_email }}</div>
                                             @if($queuedEmail->leadResult && $queuedEmail->leadResult->person)
-                                                <div class="text-sm text-gray-600">{{ $queuedEmail->leadResult->person->full_name }}</div>
+                                                <div class="text-sm text-slate-600">{{ $queuedEmail->leadResult->person->full_name }}</div>
                                             @endif
                                         </td>
                                         <td class="px-4 py-3">
-                                            <div class="text-gray-900">@php echo \Illuminate\Support\Str::limit($queuedEmail->subject, 50); @endphp</div>
+                                            <div class="text-slate-900">@php echo \Illuminate\Support\Str::limit($queuedEmail->subject, 50); @endphp</div>
                                         </td>
                                         <td class="px-4 py-3">
                                             <span class="inline-flex rounded-full px-2 py-1 text-xs font-semibold {{ $statusColors[$queuedEmail->status] ?? 'bg-gray-100 text-gray-800' }}">
@@ -916,14 +916,14 @@
                                                 <div class="text-xs text-red-600 mt-1">@php echo \Illuminate\Support\Str::limit($queuedEmail->error_message, 50); @endphp</div>
                                             @endif
                                         </td>
-                                        <td class="px-4 py-3 text-sm text-gray-600">
+                                        <td class="px-4 py-3 text-sm text-slate-600">
                                             {{ $queuedEmail->created_at->format('M d, Y H:i') }}
                                         </td>
-                                        <td class="px-4 py-3 text-sm text-gray-600">
+                                        <td class="px-4 py-3 text-sm text-slate-600">
                                             @if($queuedEmail->sent_at)
                                                 {{ $queuedEmail->sent_at->format('M d, Y H:i') }}
                                             @else
-                                                <span class="text-gray-400">-</span>
+                                                <span class="text-slate-400">-</span>
                                             @endif
                                         </td>
                                     </tr>
@@ -933,7 +933,7 @@
                     </div>
                 @else
                     <div class="py-12 text-center">
-                        <p class="text-gray-600">No queued emails found.</p>
+                        <p class="text-slate-600">No queued emails found.</p>
                     </div>
                 @endif
             </div>
@@ -943,10 +943,10 @@
     <!-- Individual Email View Modal -->
     @if($showEmailModal && $viewingEmail)
         <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" wire:click="closeEmailModal">
-            <div class="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto" wire:click.stop>
+            <div class="bg-white rounded-3xl p-6 max-w-2xl w-full mx-4 max-h-[88vh] overflow-y-auto shadow-2xl" wire:click.stop>
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-2xl font-bold text-gray-900">Generated Email</h2>
-                    <button wire:click="closeEmailModal" class="text-gray-400 hover:text-gray-600 cursor-pointer">
+                    <h2 class="text-2xl font-bold text-slate-900">Generated Email</h2>
+                    <button wire:click="closeEmailModal" class="text-slate-400 hover:text-slate-600 cursor-pointer">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -954,66 +954,68 @@
                 </div>
 
                 @if($viewingEmail->leadResult && $viewingEmail->leadResult->person)
-                    <div class="mb-4 p-4 bg-gray-50 rounded-lg">
-                        <div class="text-sm font-semibold text-gray-700">To:</div>
-                        <div class="text-lg font-bold text-gray-900">{{ $viewingEmail->leadResult->person->full_name }}</div>
-                        <div class="text-sm text-gray-600">{{ $viewingEmail->leadResult->person->email }}</div>
+                    <div class="mb-4 p-4 bg-violet-50/40 rounded-2xl border border-violet-100">
+                        <div class="text-sm font-semibold text-slate-700">To:</div>
+                        <div class="flex items-center gap-2">
+                            <div class="text-lg font-bold text-slate-900">{{ $viewingEmail->leadResult->person->full_name }}</div>
+                        <div class="text-sm text-slate-600">{{ $viewingEmail->leadResult->person->email }}</div>
                         @if($viewingEmail->leadResult->company)
-                            <div class="text-sm text-gray-600 mt-1">{{ $viewingEmail->leadResult->company->name }}</div>
+                            <div class="text-sm text-slate-600">{{ $viewingEmail->leadResult->company->name }}</div>
                         @endif
+                        </div>
                     </div>
                 @endif
 
                 <div class="mb-4">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Subject</label>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Subject</label>
                     <input 
                         type="text"
                         value="{{ $viewingEmail->subject }}"
                         wire:blur="updateEmailSubject($event.target.value)"
-                        class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-orange-500 focus:outline-none"
+                        class="w-full rounded-2xl border border-violet-200 bg-violet-50/40 p-3 text-sm text-slate-900 focus:border-violet-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/20"
                     >
                 </div>
 
-                <details class="group mb-4 rounded-lg border border-gray-200 bg-gray-50/60 p-3">
-                    <summary class="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-gray-800 [&::-webkit-details-marker]:hidden">
+                <details class="group mb-4 rounded-2xl border border-violet-100 bg-violet-50/40 p-3">
+                    <summary class="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-slate-800 [&::-webkit-details-marker]:hidden">
                         <span>Advanced Customization</span>
-                        <svg class="h-4 w-4 text-gray-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-4 w-4 text-slate-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                     </summary>
                     <div class="mt-3">
                         @if($emailTemplates->count() > 0)
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
                                 Email Template (Optional)
                             </label>
                             <select
                                 wire:model.live="selectedTemplateId"
-                                class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-orange-500 focus:outline-none"
+                                class="w-full rounded-2xl border border-violet-200 bg-violet-50/40 px-4 py-2.5 text-sm text-slate-900 focus:border-violet-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/20"
                             >
                                 <option value="">No Template</option>
                                 @foreach($emailTemplates as $template)
                                     <option value="{{ $template->id }}">{{ $template->name }}</option>
                                 @endforeach
                             </select>
-                            <p class="text-xs text-gray-500 mt-1 mb-4">Selecting a template will pre-fill the context for regeneration.</p>
+                            <p class="text-xs text-slate-500 mt-1 mb-4">Selecting a template will pre-fill the context for regeneration.</p>
                         @endif
 
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
                             Custom Context (Optional)
                         </label>
                         <textarea
                             wire:model="customContext"
                             rows="3"
-                            class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-orange-500 focus:outline-none"
+                            class="w-full rounded-2xl border border-violet-200 bg-violet-50/40 p-3 text-sm text-slate-900 focus:border-violet-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/20"
                             placeholder="Add any custom context or instructions for the AI to use when generating emails..."
                         ></textarea>
-                        <p class="text-xs text-gray-500 mt-1">This context will be used when you click <strong>Regenerate Email</strong>.</p>
+                        <p class="text-xs text-slate-500 mt-1">This context will be used when you click <strong>Regenerate Email</strong>.</p>
                     </div>
                 </details>
 
                 <div class="mb-4">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Body</label>
-                    <div class="w-full border-2 border-gray-300 rounded-lg overflow-hidden">
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Body</label>
+                    <div class="w-full border border-violet-200 rounded-2xl overflow-hidden bg-white">
                         {{-- Quill editor is controlled by Vue; Livewire ignores this region. --}}
                         <div
                             id="lead-email-quill-editor"
@@ -1033,7 +1035,7 @@
                     <button 
                         wire:click="regenerateEmail"
                         wire:loading.attr="disabled"
-                        class="px-4 py-2 text-sm font-semibold bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-300 cursor-pointer"
+                        class="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-[#8f47f2] to-[#5d30dc] text-white rounded-2xl hover:opacity-95 disabled:bg-gray-300 cursor-pointer"
                     >
                         <span wire:loading.remove>Regenerate Email</span>
                         <span wire:loading>Regenerating...</span>
@@ -1041,7 +1043,7 @@
                     <div class="flex gap-3">
                         <button 
                             wire:click="closeEmailModal"
-                            class="px-4 py-2 text-sm font-semibold bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer"
+                            class="px-4 py-2 text-sm font-semibold bg-white border border-violet-100 text-slate-700 rounded-2xl hover:bg-violet-50/40 cursor-pointer"
                         >
                             Close
                         </button>
@@ -1054,25 +1056,25 @@
     <!-- Bulk Status Update Modal -->
     @if($showBulkStatusModal)
         <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" wire:click="closeBulkStatusModal">
-            <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4" wire:click.stop>
+            <div class="bg-white rounded-3xl p-6 max-w-md w-full mx-4 shadow-2xl" wire:click.stop>
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-2xl font-bold text-gray-900">Update Status</h2>
-                    <button wire:click="closeBulkStatusModal" class="text-gray-400 hover:text-gray-600 cursor-pointer">
+                    <h2 class="text-2xl font-bold text-slate-900">Update Status</h2>
+                    <button wire:click="closeBulkStatusModal" class="text-slate-400 hover:text-slate-600 cursor-pointer">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
 
-                <p class="text-gray-700 mb-4">
+                <p class="text-slate-700 mb-4">
                     Update status for <strong>{{ count($selectedLeadResults) }} selected contact(s)</strong>:
                 </p>
 
                 <div class="mb-4">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">New Status</label>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">New Status</label>
                     <select 
                         wire:model="bulkStatus"
-                        class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-orange-500 focus:outline-none"
+                        class="w-full rounded-2xl border border-violet-200 bg-violet-50/40 px-4 py-2.5 text-sm text-slate-900 focus:border-violet-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/20"
                     >
                         <option value="">Select Status...</option>
                         <option value="pending">Pending</option>
@@ -1086,14 +1088,14 @@
                 <div class="flex justify-end gap-3">
                     <button 
                         wire:click="closeBulkStatusModal"
-                        class="px-4 py-2 text-sm font-semibold bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer"
+                        class="px-4 py-2 text-sm font-semibold bg-white border border-violet-100 text-slate-700 rounded-2xl hover:bg-violet-50/40 cursor-pointer"
                     >
                         Cancel
                     </button>
                     <button 
                         wire:click="updateBulkStatus"
                         wire:loading.attr="disabled"
-                        class="px-4 py-2 text-sm font-semibold bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 cursor-pointer"
+                        class="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-[#8f47f2] to-[#5d30dc] text-white rounded-2xl hover:opacity-95 disabled:bg-gray-300 cursor-pointer"
                     >
                         <span wire:loading.remove>Update Status</span>
                         <span wire:loading>Updating...</span>
@@ -1106,10 +1108,10 @@
     <!-- Notes Modal -->
     @if($showNotesModal && $editingNotesLeadResultId)
         <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" wire:click="closeNotesModal">
-            <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4" wire:click.stop>
+            <div class="bg-white rounded-3xl p-6 max-w-xl w-full mx-4 shadow-2xl" wire:click.stop>
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-2xl font-bold text-gray-900">Notes</h2>
-                    <button wire:click="closeNotesModal" class="text-gray-400 hover:text-gray-600 cursor-pointer">
+                    <h2 class="text-2xl font-bold text-slate-900">Notes</h2>
+                    <button wire:click="closeNotesModal" class="text-slate-400 hover:text-slate-600 cursor-pointer">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -1120,7 +1122,7 @@
                     <textarea 
                         wire:model="notesContent"
                         rows="10"
-                        class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-orange-500 focus:outline-none"
+                        class="w-full rounded-2xl border border-violet-200 bg-violet-50/40 p-3 text-sm text-slate-900 focus:border-violet-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/20"
                         placeholder="Add notes about this contact..."
                     ></textarea>
                 </div>
@@ -1128,13 +1130,13 @@
                 <div class="flex justify-end gap-3">
                     <button 
                         wire:click="closeNotesModal"
-                        class="px-4 py-2 text-sm font-semibold bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer"
+                        class="px-4 py-2 text-sm font-semibold bg-white border border-violet-100 text-slate-700 rounded-2xl hover:bg-violet-50/40 cursor-pointer"
                     >
                         Cancel
                     </button>
                     <button 
                         wire:click="saveNotes"
-                        class="px-4 py-2 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer"
+                        class="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-[#8f47f2] to-[#5d30dc] text-white rounded-2xl hover:opacity-95 cursor-pointer"
                     >
                         Save Notes
                     </button>
@@ -1146,10 +1148,10 @@
     <!-- Tags Modal -->
     @if($showTagsModal && $taggingLeadResultId)
         <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" wire:click="closeTagsModal">
-            <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4" wire:click.stop>
+            <div class="bg-white rounded-3xl p-6 max-w-xl w-full mx-4 shadow-2xl" wire:click.stop>
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-2xl font-bold text-gray-900">Manage Tags</h2>
-                    <button wire:click="closeTagsModal" class="text-gray-400 hover:text-gray-600 cursor-pointer">
+                    <h2 class="text-2xl font-bold text-slate-900">Manage Tags</h2>
+                    <button wire:click="closeTagsModal" class="text-slate-400 hover:text-slate-600 cursor-pointer">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -1157,24 +1159,24 @@
                 </div>
 
                 <!-- Create New Tag -->
-                <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-                    <h3 class="text-sm font-semibold text-gray-700 mb-3">Create New Tag</h3>
+                <div class="mb-6 p-4 bg-violet-50/40 rounded-2xl border border-violet-100">
+                    <h3 class="text-sm font-semibold text-slate-700 mb-3">Create New Tag</h3>
                     <div class="flex gap-2">
                         <input 
                             type="text"
                             wire:model="newTagName"
                             wire:keydown.enter="createTag"
                             placeholder="Tag name..."
-                            class="flex-1 border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-orange-500 focus:outline-none"
+                            class="flex-1 rounded-2xl border border-violet-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20"
                         >
                         <input 
                             type="color"
                             wire:model="newTagColor"
-                            class="w-20 h-10 border-2 border-gray-300 rounded cursor-pointer"
+                            class="w-20 h-10 border border-violet-200 rounded-2xl cursor-pointer bg-white"
                         >
                         <button 
                             wire:click="createTag"
-                            class="px-4 py-2 text-sm font-semibold bg-orange-500 text-white rounded-lg hover:bg-orange-600 cursor-pointer"
+                            class="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-[#8f47f2] to-[#5d30dc] text-white rounded-2xl hover:opacity-95 cursor-pointer"
                         >
                             Create
                         </button>
@@ -1183,15 +1185,15 @@
 
                 <!-- Select Tags -->
                 <div class="mb-4">
-                    <h3 class="text-sm font-semibold text-gray-700 mb-3">Select Tags</h3>
+                    <h3 class="text-sm font-semibold text-slate-700 mb-3">Select Tags</h3>
                     <div class="space-y-2 max-h-64 overflow-y-auto">
                         @foreach($tags as $tag)
-                            <label class="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                            <label class="flex items-center gap-2 p-2 hover:bg-violet-50/40 rounded-2xl cursor-pointer">
                                 <input 
                                     type="checkbox"
                                     wire:model="selectedTagIds"
                                     value="{{ $tag->id }}"
-                                    class="rounded border-gray-300"
+                                    class="rounded border-slate-300 text-violet-600 focus:ring-violet-500/30"
                                 >
                                 <span 
                                     class="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold text-white"
@@ -1202,14 +1204,14 @@
                                 <button 
                                     wire:click="deleteTag({{ $tag->id }})"
                                     wire:confirm="Delete this tag from all leads?"
-                                    class="ml-auto text-red-600 hover:text-red-800 text-xs"
+                                    class="ml-auto text-red-600 hover:text-red-800 text-xs font-medium"
                                 >
                                     Delete
                                 </button>
                             </label>
                         @endforeach
                         @if($tags->isEmpty())
-                            <p class="text-sm text-gray-500">No tags yet. Create one above.</p>
+                            <p class="text-sm text-slate-500">No tags yet. Create one above.</p>
                         @endif
                     </div>
                 </div>
@@ -1217,13 +1219,13 @@
                 <div class="flex justify-end gap-3">
                     <button 
                         wire:click="closeTagsModal"
-                        class="px-4 py-2 text-sm font-semibold bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer"
+                        class="px-4 py-2 text-sm font-semibold bg-white border border-violet-100 text-slate-700 rounded-2xl hover:bg-violet-50/40 cursor-pointer"
                     >
                         Cancel
                     </button>
                     <button 
                         wire:click="saveTags"
-                        class="px-4 py-2 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer"
+                        class="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-[#8f47f2] to-[#5d30dc] text-white rounded-2xl hover:opacity-95 cursor-pointer"
                     >
                         Save Tags
                     </button>

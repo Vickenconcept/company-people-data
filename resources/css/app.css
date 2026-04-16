@@ -218,3 +218,38 @@ a.bg-blue-600 {
 [data-flux-dropdown] [data-flux-menu-item] {
     color: #374151 !important;
 }
+
+/* Global custom scrollbars */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #a78bfa #f3f0ff;
+}
+
+*::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+*::-webkit-scrollbar-track {
+    background: #f3f0ff;
+    border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #c4b5fd 0%, #8b5cf6 100%);
+    border-radius: 9999px;
+    border: 1px solid #f3f0ff;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #a78bfa 0%, #7c3aed 100%);
+}
+
+*::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%);
+}
+
+/* Let pagination templates control link colors and states */
+nav[aria-label="Pagination Navigation"] a {
+    color: inherit !important;
+}

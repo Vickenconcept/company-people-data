@@ -1,27 +1,22 @@
 <div class="space-y-6">
-    <!-- Page header -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div class="flex items-start gap-3">
-            <a 
-                href="{{ route('leads.dashboard') }}" 
+            <a
+                href="{{ route('leads.dashboard') }}"
                 wire:navigate
-                class="flex items-center justify-center w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-600 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 transition-all shadow-sm cursor-pointer no-underline"
+                class="flex items-center justify-center w-10 h-10 rounded-2xl bg-white border border-violet-100 text-slate-600 hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700 transition-all shadow-sm cursor-pointer no-underline"
             >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                 </svg>
             </a>
             <div>
-                <h2 class="text-2xl font-bold text-slate-900 leading-tight">
-                    {{ __('Create New Lead Request') }}
-                </h2>
-                <p class="mt-1 text-sm text-slate-500">
-                    {{ __('Start from a reference company and let the engine find lookalike accounts and key contacts for you.') }}
-                </p>
+                <h2 class="text-2xl font-bold text-slate-900 leading-tight">{{ __('Create New Lead Request') }}</h2>
+                <p class="mt-1 text-sm text-slate-500">{{ __('Start from a reference company and let the engine find lookalike accounts and key contacts for you.') }}</p>
             </div>
         </div>
         <div class="flex items-center gap-2 text-xs text-slate-500">
-            <span class="rounded-full bg-orange-50 px-3 py-1 font-medium text-orange-600">
+            <span class="rounded-full bg-violet-100 px-3 py-1 font-semibold text-violet-700">
                 {{ __('Step 1 · Configure request') }}
             </span>
         </div>
@@ -33,49 +28,49 @@
         </div>
     @endif
 
-    <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+    <div class="rounded-3xl border border-violet-100/80 bg-white p-6 shadow-sm">
         <form wire:submit="create" class="space-y-6">
-            <div>
-                <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1">Reference Company Name *</label>
+            <div class="space-y-1.5">
+                <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600">Reference Company Name *</label>
                 <input 
                     wire:model="reference_company_name" 
                     type="text"
                     placeholder="e.g., Nike"
                     required
-                    class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-orange-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-400"
+                    class="w-full rounded-2xl border border-violet-200 bg-violet-50/40 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all focus:border-violet-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/20"
                 />
                 @error('reference_company_name') <flux:text class="text-red-600">{{ $message }}</flux:text> @enderror
             </div>
 
-            <div>
-                <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1">Company Website URL</label>
+            <div class="space-y-1.5">
+                <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600">Company Website URL</label>
                 <input 
                     wire:model="reference_company_url" 
                     type="url" 
                     placeholder="https://nike.com"
-                    class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                    class="w-full rounded-2xl border border-violet-200 bg-violet-50/40 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all focus:border-violet-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/20"
                 />
                 @error('reference_company_url') <flux:text class="text-red-600">{{ $message }}</flux:text> @enderror
                 <flux:text class="text-xs text-slate-500">Optional: Provide the company website for better analysis.</flux:text>
             </div>
 
             <div class="grid gap-4 md:grid-cols-2">
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1">Target Count *</label>
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600">Target Count *</label>
                 <input 
                     wire:model="target_count" 
                     type="number"
                     min="1"
                     max="100"
                     required
-                    class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                    class="w-full rounded-2xl border border-violet-200 bg-violet-50/40 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all focus:border-violet-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/20"
                 />
                     @error('target_count') <flux:text class="text-red-600">{{ $message }}</flux:text> @enderror
                     <flux:text class="text-xs text-slate-500">Number of similar companies to find (1–100).</flux:text>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1">Country (Optional)</label>
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600">Country (Optional)</label>
                     @php
                         $countryOptions = [
                             '' => 'Any / Not specified',
@@ -130,7 +125,7 @@
                     @endphp
                     <select
                         wire:model="country"
-                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 uppercase focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                        class="w-full rounded-2xl border border-violet-200 bg-violet-50/40 px-4 py-3 text-sm text-slate-900 uppercase shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all focus:border-violet-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/20"
                     >
                         @foreach($countryOptions as $code => $label)
                             <option value="{{ $code }}">{{ $label }}</option>
@@ -141,28 +136,28 @@
                 </div>
             </div>
 
-            <div>
-                <flux:text class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">Target Job Titles *</flux:text>
+            <div class="space-y-2">
+                <flux:text class="block text-xs font-semibold uppercase tracking-wide text-slate-600">Target Job Titles *</flux:text>
                 <div class="space-y-2">
                     <div class="flex gap-2">
                         <input 
                             wire:model="new_job_title"
                             placeholder="e.g., CTO"
-                            class="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                            class="flex-1 rounded-2xl border border-violet-200 bg-violet-50/40 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all focus:border-violet-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/20"
                         />
                         <button 
                             type="button" 
                             wire:click="addJobTitle"
-                            class="px-4 py-2 rounded-full border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50"
+                            class="px-4 py-3 rounded-2xl border border-violet-200 bg-white text-xs font-semibold text-violet-700 hover:bg-violet-50"
                         >
                             Add
                         </button>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         @foreach($target_job_titles as $title)
-                            <span class="inline-flex items-center gap-1 rounded-full bg-orange-50 px-3 py-1 text-xs font-medium text-orange-700">
+                            <span class="inline-flex items-center gap-1 rounded-full bg-violet-50 px-3 py-1 text-xs font-medium text-violet-700 border border-violet-100">
                                 {{ $title }}
-                                <button type="button" wire:click="removeJobTitle('{{ $title }}')" class="text-orange-600 hover:text-orange-800 font-bold">
+                                <button type="button" wire:click="removeJobTitle('{{ $title }}')" class="text-violet-600 hover:text-violet-800 font-bold">
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                     </svg>
@@ -180,7 +175,7 @@
                     type="submit"
                     wire:loading.attr="disabled"
                     wire:target="create"
-                    class="inline-flex items-center gap-2 rounded-full bg-orange-500 px-6 py-2 text-sm font-semibold text-white shadow-md shadow-orange-500/30 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
+                    class="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#8f47f2] to-[#5d30dc] px-6 py-2 text-sm font-semibold text-white shadow-md shadow-violet-300/60 hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                     <span wire:loading.remove wire:target="create" class="inline-flex items-center gap-2">
                         <flux:icon name="sparkles" class="size-4" />
@@ -194,10 +189,10 @@
                         <span>{{ __('Creating...') }}</span>
                     </span>
                 </button>
-                <a 
-                    href="{{ route('leads.dashboard') }}" 
+                <a
+                    href="{{ route('leads.dashboard') }}"
                     wire:navigate
-                    class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    class="inline-flex items-center gap-2 rounded-2xl border border-violet-100 bg-white px-5 py-2 text-sm font-medium text-slate-700 hover:bg-violet-50/40"
                 >
                     {{ __('Cancel') }}
                 </a>

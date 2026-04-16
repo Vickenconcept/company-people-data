@@ -1,27 +1,23 @@
 <div class="space-y-6">
-    <!-- Top action bar -->
-    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <!-- Header -->
+    <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div>
-            <h2 class="text-lg font-semibold text-slate-900">
-                {{ __('Lead Performance Overview') }}
-            </h2>
-            <p class="mt-1 text-sm text-slate-500">
-                {{ __('Track your lead discovery, outreach, and conversion in one place.') }}
-            </p>
+            <h2 class="text-xl font-semibold text-slate-900">{{ __('Lead Performance Overview') }}</h2>
+            <p class="mt-1 text-sm text-slate-500">{{ __('Track your lead discovery pipeline in one clean view.') }}</p>
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="{{ route('leads.import') }}" wire:navigate
-                class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium !text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50">
+                class="inline-flex items-center gap-2 rounded-2xl border border-violet-100 bg-white px-4 py-2 text-sm font-medium !text-slate-700 shadow-sm hover:bg-violet-50/40">
                 <flux:icon name="arrow-down-tray" class="size-4" />
-                <span>{{ __('Import Leads') }}</span>
+                <span>{{ __('Import') }}</span>
             </a>
             <a href="{{ route('leads.email-templates') }}" wire:navigate
-                class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium !text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50">
+                class="inline-flex items-center gap-2 rounded-2xl border border-violet-100 bg-white px-4 py-2 text-sm font-medium !text-slate-700 shadow-sm hover:bg-violet-50/40">
                 <flux:icon name="envelope" class="size-4" />
-                <span>{{ __('Email Templates') }}</span>
+                <span>{{ __('Templates') }}</span>
             </a>
             <a href="{{ route('leads.create') }}" wire:navigate
-                class="inline-flex items-center gap-2 rounded-full bg-orange-500 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-orange-500/30 hover:bg-orange-600">
+                class="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#8f47f2] to-[#5d30dc] px-4 py-2 text-sm font-semibold text-white shadow-md shadow-violet-300/60 hover:opacity-95">
                 <flux:icon name="plus" class="size-4 !text-white" />
                 <span class="!text-white">{{ __('New Lead Request') }}</span>
             </a>
@@ -40,78 +36,80 @@
         </div>
     @endif
 
-    <!-- Primary metrics row: highlight card + quick stats -->
-    <div class="grid gap-4 lg:grid-cols-3">
-        <!-- Highlight card -->
-        <div
-            class=" rounded-2xl bg-gradient-to-r from-orange-500 via-orange-400 to-orange-500 px-6 py-5 text-white shadow-lg">
-            <div class="flex items-start justify-between gap-4">
-                <div>
-                    <p class="text-xs font-medium uppercase tracking-wider text-orange-100">
-                        {{ __('Leads Summary') }}
-                    </p>
-                    <p class="mt-2 text-3xl font-semibold">
-                        {{ $stats['total'] }} <span
-                            class="text-base font-normal opacity-90">{{ __('total requests') }}</span>
-                    </p>
-                    <p class="mt-3 text-sm text-orange-50">
-                        {{ __('See how many companies and contacts your automation has discovered so far.') }}
-                    </p>
-                </div>
-                <div class="text-right">
-                    <p class="text-xs font-medium text-orange-100">
-                        {{ __('Conversion rate') }}
-                    </p>
-                    <p class="mt-1 text-2xl font-semibold">
-                        {{ $stats['conversion_rate'] ?? 0 }}%
-                    </p>
-                    <p class="mt-1 text-[11px] text-orange-100/90">
-                        {{ $stats['conversion']['converted'] ?? 0 }} /
-                        {{ $stats['conversion']['contacted'] ?? 0 }} {{ __('converted leads') }}
-                    </p>
-                </div>
-            </div>
+    <!-- Top KPI cards -->
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="rounded-3xl border border-violet-100/80 bg-white px-5 py-4 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">{{ __('Total') }}</p>
+            <p class="mt-2 text-4xl font-bold text-[#ff8d47]">{{ $stats['total'] }}</p>
         </div>
-
-        <!-- Small stat cards -->
-        <div
-            class="rounded-2xl bg-gradient-to-br from-emerald-50 to-white px-5 py-4 shadow-sm border border-emerald-100 flex flex-col justify-between">
-            <div class="flex items-center justify-between">
-                <p class="text-xs font-medium text-emerald-600">{{ __('Completed') }}</p>
-                <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                    {{ __('Done') }}
-                </span>
-            </div>
-            <p class="mt-2 text-2xl font-semibold text-slate-900">
-                {{ $stats['completed'] }}
-            </p>
-            <p class="mt-1 text-xs text-slate-500">
-                {{ __('Lead discovery jobs finished') }}
-            </p>
+        <div class="rounded-3xl border border-violet-100/80 bg-white px-5 py-4 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">{{ __('Contacts') }}</p>
+            <p class="mt-2 text-4xl font-bold text-[#9c4cff]">{{ $stats['total_contacts'] }}</p>
         </div>
-
-        <div
-            class="rounded-2xl bg-gradient-to-br from-sky-50 to-white px-5 py-4 shadow-sm border border-sky-100 flex flex-col justify-between">
-            <div class="flex items-center justify-between">
-                <p class="text-xs font-medium text-sky-600">{{ __('In progress') }}</p>
-                <span class="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-700">
-                    {{ __('Live') }}
-                </span>
-            </div>
-            <p class="mt-2 text-2xl font-semibold text-slate-900">
-                {{ $stats['processing'] }}
-            </p>
-            <p class="mt-1 text-xs text-slate-500">
-                {{ __('Jobs currently running') }}
-            </p>
+        <div class="rounded-3xl border border-violet-100/80 bg-white px-5 py-4 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">{{ __('Conversion') }}</p>
+            <p class="mt-2 text-4xl font-bold text-[#ff3ca4]">{{ $stats['conversion_rate'] ?? 0 }}%</p>
+        </div>
+        <div class="rounded-3xl border border-violet-100/80 bg-white px-5 py-4 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">{{ __('In Progress') }}</p>
+            <p class="mt-2 text-4xl font-bold text-[#5d30dc]">{{ $stats['processing'] }}</p>
         </div>
     </div>
 
-    <!-- Lead Requests Table with Stats Sidebar -->
+    <!-- Visual dashboard strip -->
+    <div class="grid gap-4 xl:grid-cols-3">
+        <div class="rounded-3xl border border-violet-100/80 bg-white p-5 shadow-sm xl:col-span-2">
+            <div class="mb-4 flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-slate-500">{{ __('Income Graphic') }}</h3>
+                <span class="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-600">{{ __('Live') }}</span>
+            </div>
+            <div class="relative h-52 overflow-hidden rounded-2xl bg-gradient-to-b from-slate-50 to-white px-4 py-3">
+                <div class="absolute inset-x-4 bottom-3 top-3 flex flex-col justify-between text-[10px] text-slate-300">
+                    <div class="h-px w-full bg-slate-200"></div>
+                    <div class="h-px w-full bg-slate-200"></div>
+                    <div class="h-px w-full bg-slate-200"></div>
+                    <div class="h-px w-full bg-slate-200"></div>
+                </div>
+                <div class="absolute bottom-3 left-4 right-4 h-36 rounded-2xl bg-gradient-to-r from-[#ff8d47]/80 via-[#ff5c8d]/80 to-[#f5ab42]/80 [clip-path:polygon(0%_75%,12%_58%,26%_50%,38%_55%,52%_20%,64%_35%,77%_85%,90%_60%,100%_45%,100%_100%,0_100%)]"></div>
+                <div class="absolute bottom-1 left-4 right-4 flex justify-between text-[10px] font-medium text-slate-400">
+                    <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span>
+                </div>
+            </div>
+        </div>
+        <div class="space-y-4">
+            <div class="rounded-3xl border border-violet-100/80 bg-white p-5 shadow-sm">
+                <h3 class="text-sm font-semibold text-slate-500">{{ __('Most View Item') }}</h3>
+                <div class="mt-4 space-y-3 text-xs">
+                    <div class="flex items-center justify-between">
+                        <span class="font-medium text-slate-500">#{{ $stats['total_companies'] }}</span>
+                        <span class="rounded-full bg-rose-50 px-2 py-0.5 font-semibold text-rose-600">{{ __('View') }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="font-medium text-slate-500">#{{ $stats['total_contacts'] }}</span>
+                        <span class="rounded-full bg-rose-50 px-2 py-0.5 font-semibold text-rose-600">{{ __('View') }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="font-medium text-slate-500">#{{ $stats['completed'] }}</span>
+                        <span class="rounded-full bg-rose-50 px-2 py-0.5 font-semibold text-rose-600">{{ __('View') }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="rounded-3xl border border-violet-100/80 bg-white p-5 shadow-sm">
+                <h3 class="text-sm font-semibold text-slate-500">{{ __('Growth') }}</h3>
+                <div class="mt-4 flex h-16 items-end gap-1">
+                    @for ($i = 0; $i < 20; $i++)
+                        <div class="w-2 rounded-t {{ $i % 3 === 0 ? 'bg-[#5d30dc]' : ($i % 2 === 0 ? 'bg-[#ff3ca4]' : 'bg-[#6ea0ff]') }}"
+                            style="height: {{ 20 + (($i * 13) % 40) }}px;"></div>
+                    @endfor
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lead Requests Table + right widgets -->
     <div class="grid gap-4 lg:grid-cols-4">
-        <!-- Table Section (3 columns) -->
         <div class="lg:col-span-3">
-            <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+            <div class="rounded-3xl border border-violet-100/80 bg-white p-6 shadow-sm">
                 <div class="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
                         <h3 class="text-base font-semibold text-slate-900">
@@ -131,7 +129,7 @@
                             </button>
                         @endif
                         <a href="{{ route('leads.export') }}"
-                            class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50">
+                            class="inline-flex items-center gap-2 rounded-2xl border border-violet-100 bg-white px-4 py-2 text-xs font-medium text-slate-700 shadow-sm hover:bg-violet-50/40">
                             <flux:icon name="arrow-up-tray" class="size-4" />
                             <span>{{ __('Export CSV') }}</span>
                         </a>
@@ -145,13 +143,13 @@
                             class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Search</label>
                         <input type="text" wire:model.live.debounce.300ms="search"
                             placeholder="Company name or URL..."
-                            class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-orange-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-400">
+                            class="w-full rounded-2xl border border-violet-100 bg-violet-50/30 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-violet-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-violet-300">
                     </div>
                     <div>
                         <label
                             class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Status</label>
                         <select wire:model.live="statusFilter"
-                            class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-400">
+                            class="w-full rounded-2xl border border-violet-100 bg-white px-3 py-2 text-sm text-slate-700 focus:border-violet-400 focus:outline-none focus:ring-1 focus:ring-violet-300">
                             <option value="">All Statuses</option>
                             <option value="pending">Pending</option>
                             <option value="processing">Processing</option>
@@ -163,17 +161,17 @@
                         <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Date
                             From</label>
                         <input type="date" wire:model.live="dateFrom"
-                            class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-400">
+                            class="w-full rounded-2xl border border-violet-100 bg-white px-3 py-2 text-sm text-slate-700 focus:border-violet-400 focus:outline-none focus:ring-1 focus:ring-violet-300">
                     </div>
                     <div>
                         <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Date
                             To</label>
                         <div class="flex gap-2">
                             <input type="date" wire:model.live="dateTo"
-                                class="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-400">
+                                class="flex-1 rounded-2xl border border-violet-100 bg-white px-3 py-2 text-sm text-slate-700 focus:border-violet-400 focus:outline-none focus:ring-1 focus:ring-violet-300">
                             @if ($search || $statusFilter || $dateFrom || $dateTo)
                                 <button wire:click="clearFilters"
-                                    class="rounded-full bg-slate-100 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-200">
+                                    class="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-200">
                                     Clear
                                 </button>
                             @endif
@@ -185,12 +183,12 @@
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead>
-                                <tr class="border-b border-slate-200 bg-slate-50/60">
+                                <tr class="border-b border-slate-200 bg-slate-50/80">
                                     <th
                                         class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                                         <input type="checkbox" wire:click="toggleSelectAll"
                                             @checked($selectAll)
-                                            class="w-4 h-4 text-orange-500 bg-gray-100 border-slate-300 rounded focus:ring-orange-500 cursor-pointer" />
+                                            class="w-4 h-4 text-violet-500 bg-gray-100 border-slate-300 rounded focus:ring-violet-500 cursor-pointer" />
                                     </th>
                                     <th
                                         class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -218,12 +216,12 @@
                             <tbody>
                                 @foreach ($leadRequests as $request)
                                     <tr
-                                        class="border-b border-slate-100 hover:bg-orange-50/60 transition-colors {{ in_array($request->id, $selected) ? 'bg-orange-50' : '' }}">
+                                        class="border-b border-slate-100 hover:bg-violet-50/60 transition-colors {{ in_array($request->id, $selected) ? 'bg-violet-50/70' : '' }}">
                                         <td class="px-4 py-3">
                                             <input type="checkbox"
                                                 wire:click="toggleSelect({{ $request->id }})"
                                                 @checked(in_array($request->id, $selected))
-                                                class="w-4 h-4 text-orange-500 bg-gray-100 border-slate-300 rounded focus:ring-orange-500 cursor-pointer" />
+                                                class="w-4 h-4 text-violet-500 bg-gray-100 border-slate-300 rounded focus:ring-violet-500 cursor-pointer" />
                                         </td>
                                         <td class="px-4 py-3">
                                             <div class="font-medium text-slate-900">
@@ -258,12 +256,12 @@
                                         <td class="px-4 py-3">
                                             <div class="flex gap-2">
                                                 <a href="{{ route('leads.details', $request->id) }}" wire:navigate
-                                                    class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50">
+                                                    class="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50">
                                                     View
                                                 </a>
                                                 <button wire:click="delete({{ $request->id }})"
                                                     wire:confirm="Are you sure you want to delete this lead request? This action cannot be undone."
-                                                    class="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-white px-3 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50">
+                                                    class="inline-flex items-center gap-1.5 rounded-2xl border border-rose-200 bg-white px-3 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50">
                                                     Delete
                                                 </button>
                                             </div>
@@ -283,7 +281,7 @@
                             {{ __('No lead requests yet. Start by creating your first one.') }}
                         </p>
                         <a href="{{ route('leads.create') }}" wire:navigate
-                            class="mt-4 inline-flex items-center gap-2 rounded-full bg-orange-500 px-6 py-2 text-sm font-semibold text-white shadow-md shadow-orange-500/30 hover:bg-orange-600">
+                            class="mt-4 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#8f47f2] to-[#5d30dc] px-6 py-2 text-sm font-semibold text-white shadow-md shadow-violet-300/60 hover:opacity-95">
                             <flux:icon name="plus" class="size-4" />
                             <span>{{ __('Create Lead Request') }}</span>
                         </a>
@@ -292,11 +290,8 @@
             </div>
 
         </div>
-        <!-- Stats Sidebar (1 column) -->
         <div class="space-y-4">
-            <!-- Companies discovered card -->
-            <div
-                class="rounded-2xl bg-gradient-to-br from-violet-50 to-white px-5 py-4 shadow-sm border border-violet-100">
+            <div class="rounded-3xl bg-gradient-to-br from-violet-50 to-white px-5 py-4 shadow-sm border border-violet-100">
                 <div class="flex items-start justify-between mb-2">
                     <p class="text-xs font-semibold text-violet-600 uppercase tracking-wider">
                         {{ __('Companies discovered') }}</p>
@@ -316,9 +311,7 @@
                 </p>
             </div>
 
-            <!-- Contacts discovered card -->
-            <div
-                class="rounded-2xl bg-gradient-to-br from-indigo-50 to-white px-5 py-4 shadow-sm border border-indigo-100">
+            <div class="rounded-3xl bg-gradient-to-br from-indigo-50 to-white px-5 py-4 shadow-sm border border-indigo-100">
                 <div class="flex items-start justify-between mb-2">
                     <p class="text-xs font-semibold text-indigo-600 uppercase tracking-wider">
                         {{ __('Contacts discovered') }}</p>
@@ -338,9 +331,7 @@
                 </p>
             </div>
 
-            <!-- Lead funnel card -->
-            <div
-                class="rounded-2xl bg-gradient-to-br from-amber-50 to-white px-5 py-4 shadow-sm border border-amber-100">
+            <div class="rounded-3xl bg-gradient-to-br from-amber-50 to-white px-5 py-4 shadow-sm border border-amber-100">
                 <div class="flex items-start justify-between mb-3">
                     <p class="text-xs font-semibold text-amber-600 uppercase tracking-wider">
                         {{ __('Lead funnel') }}</p>
