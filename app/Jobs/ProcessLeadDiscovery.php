@@ -27,17 +27,26 @@ class ProcessLeadDiscovery implements ShouldQueue
      */
     public function handle(): void
     {
-        Log::info('🚀 ProcessLeadDiscovery Started', [
-            'lead_request_id' => $this->leadRequest->id,
+        $this->markStep('started', [
             'company_name' => $this->leadRequest->reference_company_name,
             'target_count' => $this->leadRequest->target_count,
+            'scraper_provider' => config('services.scraper.provider'),
+            'has_openai_key' => filled(config('services.openai.api_key')),
+            'has_scrapingbee_key' => filled(config('services.scrapingbee.api_key')),
+            'has_scraperapi_key' => filled(config('services.scraperapi.api_key')),
+            'has_apollo_key' => filled(config('services.apollo.api_key')),
+            'has_hunter_key' => filled(config('services.hunter.api_key')),
         ]);
 
-        $this->leadRequest->update(['status' => 'processing']);
+        $this->leadRequest->update([
+            'status' => 'processing',
+            'error_message' => 'Step: started',
+        ]);
 
         try {
             // Step 1: Scrape reference company website
             $url = $this->leadRequest->reference_company_url ?? "https://{$this->leadRequest->reference_company_name}";
+            $this->markStep('scraping website', ['url' => $url]);
 
             $scraperService = new ScraperService();
             $scraperService->setApiKeyFromUser($this->leadRequest->user);
@@ -69,9 +78,13 @@ class ProcessLeadDiscovery implements ShouldQueue
                 }
             } else {
                 $websiteContent = $scrapeResult['content'];
+                $this->markStep('scrape succeeded', [
+                    'content_length' => strlen((string) $websiteContent),
+                ]);
             }
 
             // Step 2: Analyze with AI and create ICP
+            $this->markStep('openai icp analysis');
             $openAIService = new OpenAIService();
             $openAIService->setApiKeyFromUser($this->leadRequest->user);
 
@@ -90,6 +103,7 @@ class ProcessLeadDiscovery implements ShouldQueue
             }
 
             $icpProfile = $icpResult['icp'];
+            $this->markStep('openai search criteria');
 
             $criteriaResult = $openAIService->generateSearchCriteria($icpProfile, $this->leadRequest->country);
 
@@ -117,6 +131,7 @@ class ProcessLeadDiscovery implements ShouldQueue
                 'search_criteria' => $searchCriteria,
             ]);
 
+            $this->markStep('apollo company search');
             $companySearchService = new CompanySearchService();
             $companySearchService->setApiKeyFromUser($this->leadRequest->user);
 
@@ -168,24 +183,60 @@ class ProcessLeadDiscovery implements ShouldQueue
             }
 
             // Update status
-            $this->leadRequest->update(['status' => 'completed']);
-
-            Log::info('🎉 ProcessLeadDiscovery Completed Successfully', [
-                'lead_request_id' => $this->leadRequest->id,
+            $this->markStep('completed', [
                 'companies_found' => count($companies),
             ]);
 
-        } catch (\Exception $e) {
-            Log::error('❌ ProcessLeadDiscovery Failed', [
-                'lead_request_id' => $this->leadRequest->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+            $this->leadRequest->update([
+                'status' => 'completed',
+                'error_message' => null,
             ]);
 
+        } catch (\Throwable $e) {
+            $this->failLead($e);
+        }
+    }
+
+    public function failed(?\Throwable $exception): void
+    {
+        $this->failLead($exception ?? new \RuntimeException('Queue worker marked this job as failed.'));
+    }
+
+    private function markStep(string $step, array $context = []): void
+    {
+        $payload = array_merge([
+            'lead_request_id' => $this->leadRequest->id,
+            'step' => $step,
+        ], $context);
+
+        Log::info('ProcessLeadDiscovery: ' . $step, $payload);
+        Log::channel('lead-jobs')->info('ProcessLeadDiscovery: ' . $step, $payload);
+
+        if ($step !== 'completed') {
             $this->leadRequest->update([
-                'status' => 'failed',
-                'error_message' => $e->getMessage(),
+                'error_message' => 'Step: ' . $step,
             ]);
         }
+    }
+
+    private function failLead(\Throwable $e): void
+    {
+        Log::error('ProcessLeadDiscovery Failed', [
+            'lead_request_id' => $this->leadRequest->id,
+            'error' => $e->getMessage(),
+            'exception' => $e::class,
+            'file' => $e->getFile() . ':' . $e->getLine(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+        Log::channel('lead-jobs')->error('ProcessLeadDiscovery Failed', [
+            'lead_request_id' => $this->leadRequest->id,
+            'error' => $e->getMessage(),
+            'exception' => $e::class,
+        ]);
+
+        $this->leadRequest->update([
+            'status' => 'failed',
+            'error_message' => $e->getMessage(),
+        ]);
     }
 }

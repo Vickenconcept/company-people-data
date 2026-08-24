@@ -54,8 +54,19 @@ return [
 
         'stack' => [
             'driver' => 'stack',
-            'channels' => explode(',', env('LOG_STACK', 'single')),
+            // stderr is required so Laravel Forge daemons show job logs in the worker log.
+            'channels' => array_values(array_unique(array_filter(array_merge(
+                explode(',', env('LOG_STACK', 'single')),
+                ['stderr', 'lead-jobs']
+            )))),
             'ignore_exceptions' => false,
+        ],
+
+        'lead-jobs' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/lead-jobs.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
         ],
 
         'single' => [

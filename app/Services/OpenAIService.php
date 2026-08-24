@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class OpenAIService
 {
-    protected string $apiKey;
+    protected ?string $apiKey;
     protected string $baseUrl = 'https://api.openai.com/v1';
 
     public function __construct(?string $apiKey = null)
@@ -39,6 +39,13 @@ class OpenAIService
     public function analyzeCompanyAndCreateICP(string $websiteContent, string $companyName, ?string $websiteUrl = null): array
     {
         $prompt = $this->getICPAnalysisPrompt($websiteContent, $companyName, $websiteUrl);
+
+        if (!filled($this->apiKey)) {
+            return [
+                'success' => false,
+                'error' => 'Missing OpenAI API key. Set OPENAI_API_KEY in .env, then run php artisan config:clear && php artisan queue:restart.',
+            ];
+        }
 
         try {
             /** @var \Illuminate\Http\Client\Response $response */

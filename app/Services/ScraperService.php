@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class ScraperService
 {
-    protected string $apiKey;
+    protected ?string $apiKey;
     protected string $provider;
 
     public function __construct(?string $apiKey = null, ?string $provider = null)
@@ -41,6 +41,14 @@ class ScraperService
      */
     public function scrapeWebsite(string $url): array
     {
+        if (!filled($this->apiKey)) {
+            return [
+                'success' => false,
+                'status' => 401,
+                'error' => "Missing {$this->provider} API key. Set it in .env and run php artisan config:clear && php artisan queue:restart.",
+            ];
+        }
+
         if ($this->provider === 'scrapingbee') {
             return $this->scrapeWithScrapingBee($url);
         }
