@@ -140,14 +140,28 @@ class CompanySearchService
                 ];
             }
 
+            $apolloBody = substr($response->body(), 0, 400);
+            $apolloHint = match ($response->status()) {
+                401 => 'Apollo rejected the API key (invalid or missing). Check APOLLO_API_KEY, then run php artisan config:clear && php artisan queue:restart.',
+                403 => 'Apollo forbade this endpoint (plan/permission). Company search (mixed_companies/search) usually needs a paid Apollo plan; free/master keys often return 403.',
+                429 => 'Apollo rate limit hit. Wait and retry, or upgrade the Apollo plan.',
+                default => 'Check Apollo account status and API key permissions.',
+            };
+
             Log::error('❌ CompanySearchService: Apollo API failed', [
                 'status' => $response->status(),
-                'body' => substr($response->body(), 0, 500),
+                'body' => $apolloBody,
+                'hint' => $apolloHint,
+            ]);
+            Log::channel('lead-jobs')->error('Apollo company search failed', [
+                'status' => $response->status(),
+                'body' => $apolloBody,
+                'hint' => $apolloHint,
             ]);
 
             return [
                 'success' => false,
-                'error' => 'Failed to search companies: HTTP ' . $response->status(),
+                'error' => "Apollo HTTP {$response->status()}: {$apolloHint} Response: {$apolloBody}",
                 'companies' => [],
             ];
         } catch (\Exception $e) {
