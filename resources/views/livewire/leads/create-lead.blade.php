@@ -138,17 +138,32 @@
 
             <div class="space-y-2">
                 <flux:text class="block text-xs font-semibold uppercase tracking-wide text-slate-600">Target Job Titles *</flux:text>
-                <div class="space-y-2">
+
+                <label class="flex items-start gap-3 rounded-2xl border border-violet-100 bg-violet-50/40 px-4 py-3 cursor-pointer">
+                    <input
+                        type="checkbox"
+                        wire:model.live="use_anybody"
+                        class="mt-0.5 h-4 w-4 rounded border-violet-300 text-violet-600 focus:ring-violet-500"
+                    />
+                    <span>
+                        <span class="block text-sm font-semibold text-slate-900">Anybody at the company</span>
+                        <span class="block text-xs text-slate-500 mt-0.5">Find one person at each company — no specific title required.</span>
+                    </span>
+                </label>
+
+                <div class="space-y-2 {{ $use_anybody ? 'opacity-50 pointer-events-none' : '' }}">
                     <div class="flex gap-2">
                         <input 
                             wire:model="new_job_title"
                             placeholder="e.g., CTO"
+                            @disabled($use_anybody)
                             class="flex-1 rounded-2xl border border-violet-200 bg-violet-50/40 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all focus:border-violet-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/20"
                         />
                         <button 
                             type="button" 
                             wire:click="addJobTitle"
-                            class="px-4 py-3 rounded-2xl border border-violet-200 bg-white text-xs font-semibold text-violet-700 hover:bg-violet-50"
+                            @disabled($use_anybody)
+                            class="px-4 py-3 rounded-2xl border border-violet-200 bg-white text-xs font-semibold text-violet-700 hover:bg-violet-50 disabled:cursor-not-allowed"
                         >
                             Add
                         </button>
@@ -157,17 +172,19 @@
                         @foreach($target_job_titles as $title)
                             <span class="inline-flex items-center gap-1 rounded-full bg-violet-50 px-3 py-1 text-xs font-medium text-violet-700 border border-violet-100">
                                 {{ $title }}
+                                @if(!$use_anybody)
                                 <button type="button" wire:click="removeJobTitle('{{ $title }}')" class="text-violet-600 hover:text-violet-800 font-bold">
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
+                                @endif
                             </span>
                         @endforeach
                     </div>
                 </div>
                 @error('target_job_titles') <flux:text class="text-red-600">{{ $message }}</flux:text> @enderror
-                <flux:text class="text-xs text-slate-500">Job titles to search for (e.g., CEO, CFO, CTO).</flux:text>
+                <flux:text class="text-xs text-slate-500">Choose specific titles (CEO, CFO…) or enable Anybody to get one contact per company.</flux:text>
             </div>
 
             <div class="flex flex-wrap gap-3">

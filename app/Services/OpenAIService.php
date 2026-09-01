@@ -3,26 +3,42 @@
 namespace App\Services;
 
 use App\Models\User;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class OpenAIService
 {
     protected ?string $apiKey;
-    protected string $baseUrl = 'https://api.openai.com/v1';
 
-    public function __construct(?string $apiKey = null)
+    protected string $provider;
+
+    protected string $baseUrl;
+
+    protected string $model;
+
+    protected string $embeddingModel;
+
+    public function __construct(?string $apiKey = null, ?string $provider = null)
     {
-        $this->apiKey = $apiKey ?? config('services.openai.api_key');
+        $this->provider = $provider ?? (string) config('services.llm.provider', 'openai');
+        $this->configureProvider($apiKey);
+    }
+
+    public function getProvider(): string
+    {
+        return $this->provider;
     }
 
     /**
-     * Set API key from user's stored keys
+     * Set API key from user's stored keys.
      */
     public function setApiKeyFromUser(User $user): self
     {
+        $service = $this->provider === 'openrouter' ? 'openrouter' : 'openai';
+
         $apiKey = $user->apiKeys()
-            ->where('service', 'openai')
+            ->where('service', $service)
             ->where('is_active', true)
             ->first();
 
@@ -34,184 +50,231 @@ class OpenAIService
     }
 
     /**
-     * Analyze website content and create ICP profile
+     * Analyze website content and create ICP profile.
      */
     public function analyzeCompanyAndCreateICP(string $websiteContent, string $companyName, ?string $websiteUrl = null): array
     {
-        $prompt = $this->getICPAnalysisPrompt($websiteContent, $companyName, $websiteUrl);
-
         if (!filled($this->apiKey)) {
             return [
                 'success' => false,
-                'error' => 'Missing OpenAI API key. Set OPENAI_API_KEY in .env, then run php artisan config:clear && php artisan queue:restart.',
+                'error' => $this->missingApiKeyMessage(),
             ];
         }
 
-        try {
-            /** @var \Illuminate\Http\Client\Response $response */
-            $response = Http::timeout(60)->withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'Content-Type' => 'application/json',
-            ])->post("{$this->baseUrl}/chat/completions", [
-                'model' => 'gpt-4o-mini',
-                'messages' => [
-                    [
-                        'role' => 'system',
-                        'content' => 'You are an expert business analyst specializing in creating Ideal Customer Profiles (ICPs) for B2B companies.',
-                    ],
-                    [
-                        'role' => 'user',
-                        'content' => $prompt,
-                    ],
-                ],
-                'temperature' => 0.7,
-                'response_format' => ['type' => 'json_object'],
-            ]);
+        $prompt = $this->getICPAnalysisPrompt($websiteContent, $companyName, $websiteUrl);
 
-            if ($response->successful()) {
-                $content = $response->json('choices.0.message.content');
-                $icp = json_decode($content, true);
+        $result = $this->chatCompletion([
+            [
+                'role' => 'system',
+                'content' => 'You are an expert business analyst specializing in creating Ideal Customer Profiles (ICPs) for B2B companies.',
+            ],
+            [
+                'role' => 'user',
+                'content' => $prompt,
+            ],
+        ], [
+            'temperature' => 0.7,
+            'response_format' => ['type' => 'json_object'],
+        ]);
 
-                return [
-                    'success' => true,
-                    'icp' => $icp,
-                ];
-            }
+        if (!$result['success']) {
+            return $result;
+        }
 
-            Log::error('❌ OpenAIService: API Error', [
-                'status' => $response->status(),
-                'body' => substr($response->body(), 0, 500),
-            ]);
+        $icp = json_decode($result['content'], true);
 
+        if (!is_array($icp)) {
             return [
                 'success' => false,
-                'error' => 'Failed to analyze company: HTTP ' . $response->status(),
-            ];
-        } catch (\Exception $e) {
-            Log::error('❌ OpenAIService: Exception', [
-                'company_name' => $companyName,
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return [
-                'success' => false,
-                'error' => $e->getMessage(),
+                'error' => 'Failed to parse ICP response from LLM.',
             ];
         }
+
+        return [
+            'success' => true,
+            'icp' => $icp,
+        ];
     }
 
     /**
-     * Generate search criteria from ICP
+     * Generate search criteria from ICP.
      */
     public function generateSearchCriteria(array $icpProfile, ?string $country = null): array
     {
-        $prompt = $this->getSearchCriteriaPrompt($icpProfile, $country);
-
-        try {
-            /** @var \Illuminate\Http\Client\Response $response */
-            $response = Http::timeout(60)->withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'Content-Type' => 'application/json',
-            ])->post("{$this->baseUrl}/chat/completions", [
-                'model' => 'gpt-4o-mini',
-                'messages' => [
-                    [
-                        'role' => 'system',
-                        'content' => 'You are an expert at converting ICP profiles into searchable criteria for company databases.',
-                    ],
-                    [
-                        'role' => 'user',
-                        'content' => $prompt,
-                    ],
-                ],
-                'temperature' => 0.5,
-                'response_format' => ['type' => 'json_object'],
-            ]);
-
-            if ($response->successful()) {
-                $content = $response->json('choices.0.message.content');
-                $criteria = json_decode($content, true);
-
-                return [
-                    'success' => true,
-                    'criteria' => $criteria,
-                ];
-            }
-
-            Log::error('❌ OpenAIService: Search criteria generation failed', [
-                'status' => $response->status(),
-                'body' => substr($response->body(), 0, 500),
-            ]);
-
+        if (!filled($this->apiKey)) {
             return [
                 'success' => false,
-                'error' => 'Failed to generate search criteria: HTTP ' . $response->status(),
-            ];
-        } catch (\Exception $e) {
-            Log::error('❌ OpenAIService: Search Criteria Exception', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return [
-                'success' => false,
-                'error' => $e->getMessage(),
+                'error' => $this->missingApiKeyMessage(),
             ];
         }
+
+        $prompt = $this->getSearchCriteriaPrompt($icpProfile, $country);
+
+        $result = $this->chatCompletion([
+            [
+                'role' => 'system',
+                'content' => 'You are an expert at converting ICP profiles into searchable criteria for company databases.',
+            ],
+            [
+                'role' => 'user',
+                'content' => $prompt,
+            ],
+        ], [
+            'temperature' => 0.5,
+            'response_format' => ['type' => 'json_object'],
+        ]);
+
+        if (!$result['success']) {
+            return $result;
+        }
+
+        $criteria = json_decode($result['content'], true);
+
+        if (!is_array($criteria)) {
+            return [
+                'success' => false,
+                'error' => 'Failed to parse search criteria response from LLM.',
+            ];
+        }
+
+        return [
+            'success' => true,
+            'criteria' => $criteria,
+        ];
     }
 
     /**
-     * Generate email content for outreach
+     * Generate email content for outreach.
      */
     public function generateEmailContent(
         array $personData,
         array $companyData,
         ?string $customMessage = null,
         ?array $senderData = null
-    ): array
-    {
+    ): array {
+        if (!filled($this->apiKey)) {
+            return [
+                'success' => false,
+                'error' => $this->missingApiKeyMessage(),
+            ];
+        }
+
         $prompt = $this->getEmailGenerationPrompt($personData, $companyData, $customMessage, $senderData);
 
+        $result = $this->chatCompletion([
+            [
+                'role' => 'system',
+                'content' => 'You are an expert at writing professional, personalized cold emails for B2B outreach.',
+            ],
+            [
+                'role' => 'user',
+                'content' => $prompt,
+            ],
+        ], [
+            'temperature' => 0.8,
+        ]);
+
+        if (!$result['success']) {
+            return $result;
+        }
+
+        $emailParts = $this->parseEmailContent($result['content']);
+
+        return [
+            'success' => true,
+            'subject' => $emailParts['subject'],
+            'body' => $emailParts['body'],
+        ];
+    }
+
+    /**
+     * Create embeddings for similarity search.
+     */
+    public function createEmbedding(string $text): ?array
+    {
+        if (!filled($this->apiKey)) {
+            return null;
+        }
+
         try {
-            /** @var \Illuminate\Http\Client\Response $response */
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'Content-Type' => 'application/json',
-            ])->post("{$this->baseUrl}/chat/completions", [
-                'model' => 'gpt-4o-mini',
-                'messages' => [
-                    [
-                        'role' => 'system',
-                        'content' => 'You are an expert at writing professional, personalized cold emails for B2B outreach.',
-                    ],
-                    [
-                        'role' => 'user',
-                        'content' => $prompt,
-                    ],
-                ],
-                'temperature' => 0.8,
+            /** @var Response $response */
+            $response = Http::timeout(60)
+                ->withHeaders($this->requestHeaders())
+                ->post("{$this->baseUrl}/embeddings", [
+                    'model' => $this->embeddingModel,
+                    'input' => $text,
+                ]);
+
+            if ($response->successful()) {
+                return $response->json('data.0.embedding');
+            }
+
+            Log::error('OpenAIService: Embedding API error', [
+                'provider' => $this->provider,
+                'status' => $response->status(),
+                'body' => substr($response->body(), 0, 500),
             ]);
+
+            return null;
+        } catch (\Exception $e) {
+            Log::error('OpenAIService: Embedding exception', [
+                'provider' => $this->provider,
+                'message' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $messages
+     * @param  array<string, mixed>  $options
+     * @return array{success: bool, content?: string, error?: string}
+     */
+    protected function chatCompletion(array $messages, array $options = []): array
+    {
+        try {
+            /** @var Response $response */
+            $response = Http::timeout(60)
+                ->withHeaders($this->requestHeaders())
+                ->post("{$this->baseUrl}/chat/completions", array_merge([
+                    'model' => $this->model,
+                    'messages' => $messages,
+                ], $options));
 
             if ($response->successful()) {
                 $content = $response->json('choices.0.message.content');
 
-                // Extract subject and body
-                $emailParts = $this->parseEmailContent($content);
+                if (!is_string($content) || $content === '') {
+                    return [
+                        'success' => false,
+                        'error' => 'LLM returned an empty response.',
+                    ];
+                }
 
                 return [
                     'success' => true,
-                    'subject' => $emailParts['subject'],
-                    'body' => $emailParts['body'],
+                    'content' => $content,
                 ];
             }
 
+            $body = substr($response->body(), 0, 500);
+
+            Log::error('OpenAIService: Chat completion API error', [
+                'provider' => $this->provider,
+                'model' => $this->model,
+                'status' => $response->status(),
+                'body' => $body,
+            ]);
+
             return [
                 'success' => false,
-                'error' => 'Failed to generate email',
+                'error' => "Failed to call {$this->provider} model {$this->model}: HTTP {$response->status()} — {$body}",
             ];
         } catch (\Exception $e) {
-            Log::error('OpenAI Email Generation Exception', [
+            Log::error('OpenAIService: Chat completion exception', [
+                'provider' => $this->provider,
+                'model' => $this->model,
                 'message' => $e->getMessage(),
             ]);
 
@@ -222,38 +285,54 @@ class OpenAIService
         }
     }
 
-    /**
-     * Create embeddings for similarity search
-     */
-    public function createEmbedding(string $text): ?array
+    protected function configureProvider(?string $apiKey): void
     {
-        try {
-            /** @var \Illuminate\Http\Client\Response $response */
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'Content-Type' => 'application/json',
-            ])->post("{$this->baseUrl}/embeddings", [
-                'model' => 'text-embedding-3-small',
-                'input' => $text,
-            ]);
+        if ($this->provider === 'openrouter') {
+            $this->baseUrl = 'https://openrouter.ai/api/v1';
+            $this->apiKey = $apiKey ?? config('services.openrouter.api_key');
+            $this->model = (string) (config('services.llm.model') ?: config('services.openrouter.model', 'openai/gpt-4o-mini'));
+            $this->embeddingModel = (string) config('services.openrouter.embedding_model', 'openai/text-embedding-3-small');
 
-            if ($response->successful()) {
-                return $response->json('data.0.embedding');
-            }
-
-            return null;
-        } catch (\Exception $e) {
-            Log::error('OpenAI Embedding Exception', [
-                'message' => $e->getMessage(),
-            ]);
-
-            return null;
+            return;
         }
+
+        $this->provider = 'openai';
+        $this->baseUrl = 'https://api.openai.com/v1';
+        $this->apiKey = $apiKey ?? config('services.openai.api_key');
+        $this->model = (string) (config('services.llm.model') ?: config('services.openai.model', 'gpt-4o-mini'));
+        $this->embeddingModel = (string) config('services.openai.embedding_model', 'text-embedding-3-small');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function requestHeaders(): array
+    {
+        $headers = [
+            'Authorization' => 'Bearer '.$this->apiKey,
+            'Content-Type' => 'application/json',
+        ];
+
+        if ($this->provider === 'openrouter') {
+            $headers['HTTP-Referer'] = (string) config('services.openrouter.site_url', config('app.url'));
+            $headers['X-Title'] = (string) config('services.openrouter.app_name', config('app.name', 'Laravel'));
+        }
+
+        return $headers;
+    }
+
+    protected function missingApiKeyMessage(): string
+    {
+        if ($this->provider === 'openrouter') {
+            return 'Missing OpenRouter API key. Set OPENROUTER_API_KEY in .env, then run php artisan config:clear && php artisan queue:restart.';
+        }
+
+        return 'Missing OpenAI API key. Set OPENAI_API_KEY in .env, then run php artisan config:clear && php artisan queue:restart.';
     }
 
     protected function getICPAnalysisPrompt(string $content, string $companyName, ?string $url): string
     {
-        return "Analyze the following website content for {$companyName}" . ($url ? " ({$url})" : '') . " and create a comprehensive Ideal Customer Profile (ICP).
+        return "Analyze the following website content for {$companyName}".($url ? " ({$url})" : '')." and create a comprehensive Ideal Customer Profile (ICP).
 
 Website Content:
 {$content}
@@ -279,7 +358,7 @@ Please provide a JSON object with the following structure:
     protected function getSearchCriteriaPrompt(array $icp, ?string $country = null): string
     {
         $icpJson = json_encode($icp, JSON_PRETTY_PRINT);
-        $countryNote = $country ? "\n\nIMPORTANT: The user has specified to search in country: " . strtoupper($country) . ". Use this as the primary country in your response." : '';
+        $countryNote = $country ? "\n\nIMPORTANT: The user has specified to search in country: ".strtoupper($country).'. Use this as the primary country in your response.' : '';
 
         return "Based on this ICP profile, generate SPECIFIC search criteria for finding similar companies. Focus on the PRIMARY industry and avoid generic tech companies unless the ICP is actually a tech company.
 
@@ -290,14 +369,14 @@ IMPORTANT:
 - If the industry is \"E-commerce\", find e-commerce companies, NOT generic tech giants
 - Focus on companies that actually match the industry and business model
 - Use specific, industry-relevant keywords
-- Avoid generic keywords that would match tech giants" . ($country ? "\n- Primary country should be: " . strtoupper($country) : "") . "
+- Avoid generic keywords that would match tech giants".($country ? "\n- Primary country should be: ".strtoupper($country) : '')."
 
 Return a JSON object with:
 {
   \"industry\": \"Primary industry name (exact match for Apollo API)\",
   \"industries\": [\"Array of 3-5 specific related industries\"],
-  \"country\": \"" . ($country ? strtoupper($country) : "") . "\",
-  \"countries\": " . ($country ? "[\"" . strtoupper($country) . "\"]" : "[\"Array of top 5-10 target countries\"]") . ",
+  \"country\": \"".($country ? strtoupper($country) : '')."\",
+  \"countries\": ".($country ? '["'.strtoupper($country).'"]' : '["Array of top 5-10 target countries"]').",
   \"company_size_min\": 0,
   \"company_size_max\": 10000,
   \"keywords\": [\"5-10 SPECIFIC industry-relevant keywords that would find similar companies\"],
@@ -315,8 +394,7 @@ Example for Travel company:
         array $company,
         ?string $customMessage,
         ?array $sender
-    ): string
-    {
+    ): string {
         $personInfo = json_encode($person, JSON_PRETTY_PRINT);
         $companyInfo = json_encode($company, JSON_PRETTY_PRINT);
         $senderInfo = json_encode($sender ?? [], JSON_PRETTY_PRINT);
@@ -373,16 +451,13 @@ BODY:
         $subject = '';
         $body = '';
 
-        // Try to extract subject
         if (preg_match('/SUBJECT:\s*(.+?)(?:\n|$)/i', $content, $matches)) {
             $subject = trim($matches[1]);
         }
 
-        // Try to extract body
         if (preg_match('/BODY:\s*(.+)/is', $content, $matches)) {
             $body = trim($matches[1]);
         } else {
-            // If no BODY tag, use everything after SUBJECT
             $body = preg_replace('/SUBJECT:.*?\n/i', '', $content);
             $body = trim($body);
         }
@@ -393,4 +468,3 @@ BODY:
         ];
     }
 }
-

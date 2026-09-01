@@ -11,7 +11,9 @@ class ApiKeys extends Component
 {
     public array $services = [
         'openai' => 'OpenAI',
+        'openrouter' => 'OpenRouter',
         'scraperapi' => 'ScraperAPI',
+        'prospeo' => 'Prospeo',
         'apollo' => 'Apollo.io',
         'hunter' => 'Hunter.io',
     ];
@@ -44,7 +46,7 @@ class ApiKeys extends Component
     public function save(): void
     {
         $validated = $this->validate([
-            'selected_service' => 'required|in:openai,scraperapi,apollo,hunter',
+            'selected_service' => 'required|in:openai,openrouter,scraperapi,prospeo,apollo,hunter',
             'api_key' => 'required|string|max:500',
             'is_active' => 'boolean',
         ]);

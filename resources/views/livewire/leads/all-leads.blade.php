@@ -1,19 +1,15 @@
 <div
     class="space-y-6"
-    @if($hasProcessingRequests)
+    @if($hasActiveRequests)
         wire:poll.6s
-    @elseif($hasActiveRequests)
-        wire:poll.20s
     @endif
 >
     <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <div>
             <h2 class="text-xl font-semibold text-slate-900">{{ __('All Lead Requests') }}</h2>
             <p class="mt-1 text-sm text-slate-500">{{ __('Every automated discovery job in one unified board.') }}</p>
-            @if($hasProcessingRequests)
-                <p class="mt-1 text-xs text-violet-500">{{ __('Auto-refreshing every 6s while requests are processing.') }}</p>
-            @elseif($hasActiveRequests)
-                <p class="mt-1 text-xs text-violet-500">{{ __('Auto-refreshing every 20s while requests are pending.') }}</p>
+            @if($hasActiveRequests)
+                <p class="mt-1 text-xs text-violet-500">{{ __('Auto-refreshing every 6s while discovery is in progress.') }}</p>
             @endif
         </div>
         <div class="flex flex-wrap gap-2">
@@ -207,8 +203,34 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-sm text-slate-800">{{ $request->target_count }}</td>
-                                <td class="px-4 py-3 text-sm text-slate-800">{{ $request->companies_found }}</td>
-                                <td class="px-4 py-3 text-sm text-slate-800">{{ $request->contacts_found }}</td>
+                                <td class="px-4 py-3 text-sm text-slate-800">
+                                    @if($request->isFindingCompanies())
+                                        <span class="inline-flex items-center gap-2 text-violet-700" title="{{ __('Finding companies…') }}">
+                                            <span class="tabular-nums">0</span>
+                                            <svg class="h-3.5 w-3.5 animate-spin shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25" stroke-width="3"></circle>
+                                                <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
+                                            </svg>
+                                        </span>
+                                    @else
+                                        <span class="tabular-nums">{{ $request->companies_found }}</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3 text-sm text-slate-800">
+                                    @if($request->isFindingContacts())
+                                        <span class="inline-flex items-center gap-2 text-violet-700" title="{{ __('Finding contacts…') }}">
+                                            <span class="tabular-nums">{{ $request->contacts_found }}</span>
+                                            <svg class="h-3.5 w-3.5 animate-spin shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25" stroke-width="3"></circle>
+                                                <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
+                                            </svg>
+                                        </span>
+                                    @elseif($request->isFindingCompanies())
+                                        <span class="tabular-nums text-slate-400" title="{{ __('Waiting for companies…') }}">—</span>
+                                    @else
+                                        <span class="tabular-nums">{{ $request->contacts_found }}</span>
+                                    @endif
+                                </td>
                                 <td class="px-4 py-3 text-xs text-slate-500">{{ $request->created_at->diffForHumans() }}</td>
                                 <td class="px-4 py-3">
                                     <div class="flex gap-2">

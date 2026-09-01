@@ -4,6 +4,7 @@ namespace App\Livewire\Leads;
 
 use App\Jobs\ProcessLeadDiscovery;
 use App\Models\LeadRequest;
+use App\Support\JobTitleSearch;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -17,10 +18,25 @@ class CreateLead extends Component
     public int $target_count = 10;
     public array $target_job_titles = ['CEO', 'CFO'];
     public string $new_job_title = '';
+    public bool $use_anybody = false;
     public ?string $country = null;
+
+    public function updatedUseAnybody(bool $value): void
+    {
+        if ($value) {
+            $this->target_job_titles = [JobTitleSearch::ANYBODY];
+            $this->new_job_title = '';
+        } elseif (JobTitleSearch::isAnybodySearch($this->target_job_titles)) {
+            $this->target_job_titles = ['CEO', 'CFO'];
+        }
+    }
 
     public function addJobTitle(): void
     {
+        if ($this->use_anybody) {
+            return;
+        }
+
         if (!empty($this->new_job_title) && !in_array($this->new_job_title, $this->target_job_titles)) {
             $this->target_job_titles[] = trim($this->new_job_title);
             $this->new_job_title = '';
@@ -29,11 +45,19 @@ class CreateLead extends Component
 
     public function removeJobTitle(string $title): void
     {
-        $this->target_job_titles = array_values(array_filter($this->target_job_titles, fn($t) => $t !== $title));
+        if ($this->use_anybody) {
+            return;
+        }
+
+        $this->target_job_titles = array_values(array_filter($this->target_job_titles, fn ($t) => $t !== $title));
     }
 
     public function create(): void
     {
+        if ($this->use_anybody) {
+            $this->target_job_titles = [JobTitleSearch::ANYBODY];
+        }
+
         $validated = $this->validate([
             'reference_company_name' => 'required|string|max:255',
             'reference_company_url' => 'nullable|url|max:500',
@@ -51,7 +75,7 @@ class CreateLead extends Component
             'target_count' => $validated['target_count'],
             'target_job_titles' => $validated['target_job_titles'],
             'country' => $validated['country'] ?? null,
-            'status' => 'pending',
+            'status' => 'processing',
         ]);
 
         Log::info('📋 New Lead Request Created', [

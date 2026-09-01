@@ -142,7 +142,14 @@ class AllLeads extends Component
             ->exists();
 
         $this->hasActiveRequests = $baseQuery
-            ->whereIn('status', ['pending', 'processing'])
+            ->where(function ($query) {
+                $query->whereIn('status', ['pending', 'processing'])
+                    ->orWhere(function ($pendingContacts) {
+                        $pendingContacts->where('status', 'completed')
+                            ->whereColumn('contacts_found', '<', 'companies_found')
+                            ->where('updated_at', '>=', now()->subMinutes(30));
+                    });
+            })
             ->exists();
     }
 

@@ -1,4 +1,4 @@
-<div class="space-y-6">
+<div class="space-y-6" @if($isDiscovering ?? false) wire:poll.4s="refreshLeadRequest" @endif>
     <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div class="flex items-start gap-3">
             <a
@@ -16,6 +16,25 @@
             </div>
         </div>
     </div>
+
+    @if($isDiscovering ?? false)
+        <div class="rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 to-white px-5 py-4 flex items-center gap-3 shadow-sm">
+            <svg class="h-5 w-5 animate-spin text-violet-600 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25" stroke-width="3"></circle>
+                <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
+            </svg>
+            <div>
+                <p class="text-sm font-semibold text-violet-900">
+                    @if($leadRequest->isFindingCompanies())
+                        Finding companies…
+                    @else
+                        Finding contacts…
+                    @endif
+                </p>
+                <p class="text-xs text-violet-700 mt-0.5">This page refreshes automatically every few seconds.</p>
+            </div>
+        </div>
+    @endif
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -35,8 +54,24 @@
                     <svg class="w-4 h-4 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                     <span class="text-xs font-semibold text-violet-600 uppercase tracking-wider">Companies</span>
                 </div>
-                <div class="text-3xl font-bold text-violet-700">{{ $leadRequest->companies_found }}</div>
-                <p class="text-xs text-slate-500 mt-1.5">discovered</p>
+                <div class="text-3xl font-bold text-violet-700">
+                    @if($leadRequest->isFindingCompanies())
+                        <span class="inline-flex items-center gap-2">
+                            <span class="tabular-nums">0</span>
+                            <svg class="h-5 w-5 animate-spin text-violet-500 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25" stroke-width="3"></circle>
+                                <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
+                            </svg>
+                        </span>
+                    @else
+                        {{ $leadRequest->companies_found }}
+                    @endif
+                </div>
+                @if($leadRequest->isFindingCompanies())
+                    <p class="text-xs text-violet-600 mt-1.5 animate-pulse">Searching for similar companies…</p>
+                @else
+                    <p class="text-xs text-slate-500 mt-1.5">discovered</p>
+                @endif
             </div>
         </div>
         <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-50 to-white border border-violet-100/70 shadow-sm p-5">
@@ -45,8 +80,28 @@
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Contacts</span>
                 </div>
-                <div class="text-3xl font-bold text-slate-900">{{ $leadRequest->contacts_found }}</div>
-                <p class="text-xs text-slate-500 mt-1.5">people found</p>
+                <div class="text-3xl font-bold text-slate-900">
+                    @if($leadRequest->isFindingContacts())
+                        <span class="inline-flex items-center gap-2 text-violet-600">
+                            <span class="tabular-nums">{{ $leadRequest->contacts_found }}</span>
+                            <svg class="h-5 w-5 animate-spin text-violet-500 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25" stroke-width="3"></circle>
+                                <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
+                            </svg>
+                        </span>
+                    @elseif($leadRequest->isFindingCompanies())
+                        <span class="tabular-nums text-slate-400">—</span>
+                    @else
+                        {{ $leadRequest->contacts_found }}
+                    @endif
+                </div>
+                @if($leadRequest->isFindingContacts())
+                    <p class="text-xs text-violet-600 mt-1.5 animate-pulse">Finding contacts across {{ $leadRequest->companies_found }} companies…</p>
+                @elseif($leadRequest->isFindingCompanies())
+                    <p class="text-xs text-slate-400 mt-1.5">Waiting for companies…</p>
+                @else
+                    <p class="text-xs text-slate-500 mt-1.5">people found</p>
+                @endif
             </div>
         </div>
         <div class="relative overflow-hidden rounded-3xl bg-white border border-violet-100/70 shadow-sm p-5">
@@ -195,7 +250,7 @@
                     wire:click="setTab('contacts')"
                     class="px-6 py-4 text-sm font-semibold transition-all relative cursor-pointer {{ $activeTab === 'contacts' ? 'text-violet-700' : 'text-slate-500 hover:text-slate-900' }}"
                 >
-                    Contacts ({{ $results->total() }})
+                    Contacts ({{ $companyResults->count() ?? $results->total() }})
                     @if($activeTab === 'contacts')
                         <span class="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-violet-400 to-violet-700 rounded-full"></span>
                     @endif
@@ -204,7 +259,7 @@
                     wire:click="setTab('companies')"
                     class="px-6 py-4 text-sm font-semibold transition-all relative cursor-pointer {{ $activeTab === 'companies' ? 'text-violet-700' : 'text-slate-500 hover:text-slate-900' }}"
                 >
-                    Companies ({{ $companies->count() }})
+                    Companies ({{ $isDiscovering && $companies->count() === 0 ? '…' : $companies->count() }})
                     @if($activeTab === 'companies')
                         <span class="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-violet-400 to-violet-700 rounded-full"></span>
                     @endif
@@ -429,11 +484,12 @@
                             @foreach($results as $result)
                                 @php
                                     $hasEmail = $result->person && $result->person->email;
+                                    $isPendingLookup = !$result->person_id && empty($result->notes);
                                     $isSelected = in_array($result->id, $selectedLeadResults);
                                     $isGenerating = in_array($result->id, $generatingLeadResultIds);
                                     $hasGeneratedEmail = $result->generatedEmail !== null;
                                 @endphp
-                                <tr class="group border-b border-slate-100 hover:bg-gradient-to-r hover:from-orange-50/40 hover:to-transparent transition-all duration-150 {{ $isSelected ? 'bg-gradient-to-r from-orange-50 to-transparent' : 'bg-white' }}">
+                                <tr class="group border-b border-slate-100 hover:bg-gradient-to-r hover:from-orange-50/40 hover:to-transparent transition-all duration-150 {{ $isSelected ? 'bg-gradient-to-r from-orange-50 to-transparent' : 'bg-white' }} {{ $isPendingLookup ? 'bg-violet-50/20' : '' }}">
                                     <td class="px-4 py-3 align-top">
                                         @if($hasEmail)
                                             <input 
@@ -481,6 +537,19 @@
                                                         <span class="truncate">{{ $result->person->email }}</span>
                                                     </a>
                                                 @endif
+                                            @elseif($isPendingLookup)
+                                                <div class="inline-flex items-center gap-2 rounded-lg bg-violet-50 border border-violet-100 px-3 py-2 text-xs text-violet-700">
+                                                    <svg class="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25" stroke-width="3"></circle>
+                                                        <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
+                                                    </svg>
+                                                    Searching for a contact…
+                                                </div>
+                                            @elseif($result->notes)
+                                                <div class="rounded-lg bg-amber-50 border border-amber-100 px-3 py-2 text-xs text-amber-800 leading-relaxed">
+                                                    <span class="font-semibold">No contact found.</span>
+                                                    {{ $result->notes }}
+                                                </div>
                                             @else
                                                 <span class="text-slate-400 text-xs italic">No contact</span>
                                             @endif
@@ -627,7 +696,7 @@
 
         <!-- Companies Tab Content -->
         @if($activeTab === 'companies')
-            @if($companies->count() > 0)
+            @if(($companyResults ?? collect())->count() > 0)
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead>
@@ -641,12 +710,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($companies as $company)
+                            @foreach($companyResults as $result)
                                 @php
-                                    $contactsCount = $leadRequest->leadResults()
-                                        ->where('company_id', $company->id)
-                                        ->count();
+                                    $company = $result->company;
+                                    $hasContact = !empty($result->person_id);
+                                    $isPendingLookup = !$hasContact && empty($result->notes);
                                 @endphp
+                                @if($company)
                                 <tr class="border-b border-slate-100 hover:bg-violet-50/30 transition-colors bg-white">
                                     <td class="px-6 py-4">
                                         <div class="font-semibold text-slate-900">{{ $company->name }}</div>
@@ -678,22 +748,30 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4">
-                                        @if($company->employees)
-                                            <span class="text-sm font-medium text-slate-900">{{ number_format($company->employees) }}</span>
+                                        @if($company->employee_count)
+                                            <span class="text-sm font-medium text-slate-900">{{ number_format($company->employee_count) }}</span>
                                         @else
                                             <span class="text-slate-400">-</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4">
-                                        @if($contactsCount > 0)
-                                            <span class="inline-flex rounded-full bg-violet-50 border border-violet-100 px-3 py-1.5 text-xs font-semibold text-violet-700">
-                                                {{ $contactsCount }} {{ $contactsCount === 1 ? 'contact' : 'contacts' }}
+                                        @if($isPendingLookup)
+                                            <span class="inline-flex items-center gap-1.5 rounded-full bg-violet-50 border border-violet-100 px-3 py-1.5 text-xs font-semibold text-violet-700">
+                                                <svg class="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25" stroke-width="3"></circle><path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path></svg>
+                                                Searching…
+                                            </span>
+                                        @elseif($hasContact)
+                                            <span class="inline-flex rounded-full bg-emerald-50 border border-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+                                                1 contact
                                             </span>
                                         @else
-                                            <span class="text-slate-400">0</span>
+                                            <span class="inline-flex rounded-full bg-amber-50 border border-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-700" title="{{ $result->notes }}">
+                                                No contact
+                                            </span>
                                         @endif
                                     </td>
                                 </tr>
+                                @endif
                             @endforeach
                         </tbody>
                     </table>

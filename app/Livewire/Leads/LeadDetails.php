@@ -77,6 +77,13 @@ class LeadDetails extends Component
             ->findOrFail($id);
     }
 
+    public function refreshLeadRequest(): void
+    {
+        $this->leadRequest = LeadRequest::where('user_id', Auth::id())
+            ->with(['leadResults.company', 'leadResults.person'])
+            ->findOrFail($this->leadRequest->id);
+    }
+
     public function setTab(string $tab): void
     {
         $this->activeTab = $tab;
@@ -960,6 +967,8 @@ class LeadDetails extends Component
 
     public function render()
     {
+        $this->refreshLeadRequest();
+
         $query = $this->leadRequest->leadResults()
             ->with(['company', 'person', 'queuedEmails', 'generatedEmail', 'tags']);
 
@@ -1035,12 +1044,14 @@ class LeadDetails extends Component
         $emailTemplates = EmailTemplate::where('user_id', Auth::id())->orderBy('name')->get();
 
         // Get unique companies found for this lead request
-        $companies = $this->leadRequest->leadResults()
-            ->with('company')
-            ->get()
-            ->pluck('company')
-            ->unique('id')
-            ->values();
+        $companyResults = $this->leadRequest->leadResults()
+            ->with(['company', 'person'])
+            ->get();
+
+        $companies = $companyResults->pluck('company')->filter()->unique('id')->values();
+
+        $contactsWithEmail = $companyResults->whereNotNull('person_id')->count();
+        $isDiscovering = $this->leadRequest->isDiscovering();
 
         // Get queued emails for this lead request
         $queuedEmails = $this->leadRequest->leadResults()
@@ -1056,6 +1067,9 @@ class LeadDetails extends Component
         return view('livewire.leads.lead-details', [
             'results' => $results,
             'companies' => $companies,
+            'companyResults' => $companyResults,
+            'contactsWithEmail' => $contactsWithEmail,
+            'isDiscovering' => $isDiscovering,
             'queuedEmails' => $queuedEmails,
             'industries' => $industries,
             'jobTitles' => $jobTitles,

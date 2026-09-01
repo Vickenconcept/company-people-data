@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\LeadRequest;
+use App\Models\LeadResult;
 use App\Services\CompanySearchService;
 use App\Services\OpenAIService;
 use App\Services\ScraperService;
@@ -13,6 +14,11 @@ use Illuminate\Support\Facades\Log;
 class ProcessLeadDiscovery implements ShouldQueue
 {
     use Queueable;
+
+    public int $tries = 5;
+
+    /** @var list<int> */
+    public array $backoff = [30, 60, 120, 300, 600];
 
     /**
      * Create a new job instance.
@@ -31,10 +37,17 @@ class ProcessLeadDiscovery implements ShouldQueue
             'company_name' => $this->leadRequest->reference_company_name,
             'target_count' => $this->leadRequest->target_count,
             'scraper_provider' => config('services.scraper.provider'),
+            'llm_provider' => config('services.llm.provider'),
+            'llm_model' => config('services.llm.model') ?: (config('services.llm.provider') === 'openrouter'
+                ? config('services.openrouter.model')
+                : config('services.openai.model')),
             'has_openai_key' => filled(config('services.openai.api_key')),
+            'has_openrouter_key' => filled(config('services.openrouter.api_key')),
             'has_scrapingbee_key' => filled(config('services.scrapingbee.api_key')),
             'has_scraperapi_key' => filled(config('services.scraperapi.api_key')),
+            'prospecting_provider' => config('services.prospecting.provider'),
             'has_apollo_key' => filled(config('services.apollo.api_key')),
+            'has_prospeo_key' => filled(config('services.prospeo.api_key')),
             'has_hunter_key' => filled(config('services.hunter.api_key')),
         ]);
 
@@ -84,7 +97,7 @@ class ProcessLeadDiscovery implements ShouldQueue
             }
 
             // Step 2: Analyze with AI and create ICP
-            $this->markStep('openai icp analysis');
+            $this->markStep(config('services.llm.provider', 'openai').' icp analysis');
             $openAIService = new OpenAIService();
             $openAIService->setApiKeyFromUser($this->leadRequest->user);
 
@@ -103,7 +116,7 @@ class ProcessLeadDiscovery implements ShouldQueue
             }
 
             $icpProfile = $icpResult['icp'];
-            $this->markStep('openai search criteria');
+            $this->markStep(config('services.llm.provider', 'openai').' search criteria');
 
             $criteriaResult = $openAIService->generateSearchCriteria($icpProfile, $this->leadRequest->country);
 
@@ -131,7 +144,7 @@ class ProcessLeadDiscovery implements ShouldQueue
                 'search_criteria' => $searchCriteria,
             ]);
 
-            $this->markStep('apollo company search');
+            $this->markStep(config('services.prospecting.provider', 'prospeo').' company search');
             $companySearchService = new CompanySearchService();
             $companySearchService->setApiKeyFromUser($this->leadRequest->user);
 
@@ -152,6 +165,10 @@ class ProcessLeadDiscovery implements ShouldQueue
 
             if (!$companiesResult['success']) {
                 $error = $companiesResult['error'] ?? 'Unknown error';
+
+                if (!empty($companiesResult['rate_limited'])) {
+                    throw new \RuntimeException('Prospecting provider rate limited: '.$error);
+                }
                 
                 Log::error('❌ Company search failed', [
                     'lead_request_id' => $this->leadRequest->id,
@@ -174,13 +191,26 @@ class ProcessLeadDiscovery implements ShouldQueue
 
             $companies = $companySearchService->storeCompanies($companiesResult['companies']);
 
+            foreach ($companies as $company) {
+                LeadResult::updateOrCreate(
+                    [
+                        'lead_request_id' => $this->leadRequest->id,
+                        'company_id' => $company->id,
+                    ],
+                    [
+                        'person_id' => null,
+                        'similarity_score' => null,
+                        'status' => 'pending',
+                        'notes' => null,
+                    ]
+                );
+
+                ProcessPersonLookup::dispatch($this->leadRequest, $company);
+            }
+
             $this->leadRequest->update([
                 'companies_found' => count($companies),
             ]);
-
-            foreach ($companies as $company) {
-                ProcessPersonLookup::dispatch($this->leadRequest, $company);
-            }
 
             // Update status
             $this->markStep('completed', [

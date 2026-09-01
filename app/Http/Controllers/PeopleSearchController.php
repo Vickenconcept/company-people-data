@@ -33,7 +33,7 @@ class PeopleSearchController extends Controller
             $company = Company::findOrFail($request->company_id);
 
             $peopleSearchService = new PeopleSearchService();
-            $peopleSearchService->setApiKeyFromUser($request->user(), 'apollo');
+            $peopleSearchService->setApiKeyFromUser($request->user());
 
             $result = $peopleSearchService->findPeople(
                 $company,

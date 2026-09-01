@@ -45,8 +45,23 @@ return [
         'provider' => env('SCRAPER_PROVIDER', 'scraperapi'),
     ],
 
+    'llm' => [
+        'provider' => env('LLM_PROVIDER', 'openai'),
+        'model' => env('LLM_MODEL'),
+    ],
+
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
+        'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+        'embedding_model' => env('OPENAI_EMBEDDING_MODEL', 'text-embedding-3-small'),
+    ],
+
+    'openrouter' => [
+        'api_key' => env('OPENROUTER_API_KEY'),
+        'model' => env('OPENROUTER_MODEL', 'openai/gpt-4o-mini'),
+        'embedding_model' => env('OPENROUTER_EMBEDDING_MODEL', 'openai/text-embedding-3-small'),
+        'site_url' => env('OPENROUTER_SITE_URL', env('APP_URL')),
+        'app_name' => env('OPENROUTER_APP_NAME', env('APP_NAME', 'Laravel')),
     ],
 
     'scraperapi' => [
@@ -57,8 +72,16 @@ return [
         'api_key' => env('SCRAPINGBEE_API_KEY'),
     ],
 
+    'prospecting' => [
+        'provider' => env('PROSPECTING_PROVIDER', 'prospeo'),
+    ],
+
     'apollo' => [
         'api_key' => env('APOLLO_API_KEY'),
+    ],
+
+    'prospeo' => [
+        'api_key' => env('PROSPEO_API_KEY'),
     ],
 
     'hunter' => [

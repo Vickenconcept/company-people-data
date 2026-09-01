@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Models\LeadRequest;
 use App\Models\LeadResult;
 use App\Services\PeopleSearchService;
+use App\Support\JobTitleSearch;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -14,56 +15,50 @@ class ProcessPersonLookup implements ShouldQueue
 {
     use Queueable;
 
-    /**
-     * Create a new job instance.
-     */
+    public int $tries = 5;
+
+    /** @var list<int> */
+    public array $backoff = [30, 60, 120, 300, 600];
+
     public function __construct(
         public LeadRequest $leadRequest,
         public Company $company
     ) {
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
         try {
-            $jobTitles = $this->leadRequest->target_job_titles ?? ['CEO', 'CFO'];
+            $jobTitles = JobTitleSearch::resolveTitles(
+                $this->leadRequest->target_job_titles ?? ['CEO', 'CFO']
+            );
 
-            // Find people - try Apollo first, will auto-fallback to Hunter.io if needed
             $peopleSearchService = new PeopleSearchService();
-            $peopleSearchService->setApiKeyFromUser($this->leadRequest->user, 'apollo');
+            $peopleSearchService->setApiKeyFromUser($this->leadRequest->user);
 
             $peopleResult = $peopleSearchService->findPeople(
                 $this->company,
                 $jobTitles,
-                1 // Keep API usage minimal: one contact per company
+                1
             );
-            
-            // If Apollo failed and we have a Hunter API key, try Hunter.io
+
             if (!$peopleResult['success'] && !empty($this->leadRequest->user->apiKeys()->where('service', 'hunter')->where('is_active', true)->first())) {
                 $hunterService = new PeopleSearchService();
                 $hunterService->setApiKeyFromUser($this->leadRequest->user, 'hunter');
-                
+
                 $hunterResult = $hunterService->findPeople(
                     $this->company,
                     $jobTitles,
                     1
                 );
-                
+
                 if ($hunterResult['success']) {
                     $peopleResult = $hunterResult;
                 }
             }
 
-            if (!$peopleResult['success']) {
-                Log::warning('⚠️ ProcessPersonLookup Failed', [
-                    'lead_request_id' => $this->leadRequest->id,
-                    'company_id' => $this->company->id,
-                    'error' => $peopleResult['error'] ?? 'Unknown error',
-                ]);
-                return;
+            if (!empty($peopleResult['rate_limited'])) {
+                throw new \RuntimeException('Prospecting provider rate limited: '.($peopleResult['error'] ?? 'Rate limit exceeded'));
             }
 
             $peopleWithEmail = array_values(array_filter(
@@ -71,55 +66,79 @@ class ProcessPersonLookup implements ShouldQueue
                 fn (array $person): bool => !empty(trim((string) ($person['email'] ?? '')))
             ));
 
-            if (empty($peopleWithEmail)) {
-                Log::info('ℹ️ ProcessPersonLookup: No contact with email found', [
-                    'lead_request_id' => $this->leadRequest->id,
-                    'company_id' => $this->company->id,
+            if (!empty($peopleWithEmail)) {
+                $person = $peopleSearchService->storePeople([$peopleWithEmail[0]])[0] ?? null;
+
+                if (!$person) {
+                    $this->saveNoContactResult('Contact found but could not be saved to the database.');
+
+                    return;
+                }
+
+                $leadResult = LeadResult::updateOrCreate(
+                    [
+                        'lead_request_id' => $this->leadRequest->id,
+                        'company_id' => $this->company->id,
+                    ],
+                    [
+                        'person_id' => $person->id,
+                        'similarity_score' => null,
+                        'status' => 'pending',
+                        'notes' => null,
+                    ]
+                );
+
+                $this->leadRequest->update([
+                    'contacts_found' => $this->leadRequest->leadResults()->whereNotNull('person_id')->count(),
                 ]);
-                return;
-            }
 
-            // Keep exactly one contact per company: the first matching person with an email.
-            $person = $peopleSearchService->storePeople([$peopleWithEmail[0]])[0] ?? null;
-
-            if (!$person) {
-                Log::warning('⚠️ ProcessPersonLookup: Failed to store selected contact', [
+                Log::info('ProcessPersonLookup Completed', [
                     'lead_request_id' => $this->leadRequest->id,
                     'company_id' => $this->company->id,
-                ]);
-                return;
-            }
-
-            $leadResult = LeadResult::updateOrCreate(
-                [
-                    'lead_request_id' => $this->leadRequest->id,
-                    'company_id' => $this->company->id,
-                ],
-                [
                     'person_id' => $person->id,
-                    'similarity_score' => null,
-                    'status' => 'pending',
-                ]
-            );
+                    'lead_result_id' => $leadResult->id,
+                ]);
 
-            // Update lead request counts
-            if ($leadResult->wasRecentlyCreated) {
-                $this->leadRequest->increment('contacts_found', 1);
+                return;
             }
 
-            Log::info('🎉 ProcessPersonLookup Completed', [
+            $reason = $peopleResult['error'] ?? 'No verified contact with email was found.';
+            $titlesLabel = JobTitleSearch::displayLabel($this->leadRequest->target_job_titles ?? []);
+            $note = JobTitleSearch::isAnybodySearch($this->leadRequest->target_job_titles ?? [])
+                ? "No contact found at this company. {$reason}"
+                : "No verified contact found for requested titles ({$titlesLabel}). {$reason}";
+
+            $this->saveNoContactResult($note);
+
+            Log::info('ProcessPersonLookup: No contact with email found', [
                 'lead_request_id' => $this->leadRequest->id,
                 'company_id' => $this->company->id,
-                'contacts_found' => $leadResult->wasRecentlyCreated ? 1 : 0,
+                'note' => $note,
             ]);
-
         } catch (\Exception $e) {
-            Log::error('❌ ProcessPersonLookup Exception', [
+            Log::error('ProcessPersonLookup Exception', [
                 'lead_request_id' => $this->leadRequest->id,
                 'company_id' => $this->company->id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ]);
+
+            throw $e;
         }
+    }
+
+    protected function saveNoContactResult(string $note): void
+    {
+        LeadResult::updateOrCreate(
+            [
+                'lead_request_id' => $this->leadRequest->id,
+                'company_id' => $this->company->id,
+            ],
+            [
+                'person_id' => null,
+                'similarity_score' => null,
+                'status' => 'pending',
+                'notes' => $note,
+            ]
+        );
     }
 }

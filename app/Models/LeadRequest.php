@@ -41,4 +41,32 @@ class LeadRequest extends Model
     {
         return $this->hasMany(LeadResult::class);
     }
+
+    public function hasPendingContactLookups(): bool
+    {
+        return $this->leadResults()
+            ->whereNull('person_id')
+            ->whereNull('notes')
+            ->exists();
+    }
+
+    public function isFindingCompanies(): bool
+    {
+        return in_array($this->status, ['pending', 'processing'], true)
+            && ($this->companies_found ?? 0) === 0;
+    }
+
+    public function isFindingContacts(): bool
+    {
+        if ($this->isFindingCompanies()) {
+            return false;
+        }
+
+        return $this->hasPendingContactLookups();
+    }
+
+    public function isDiscovering(): bool
+    {
+        return $this->isFindingCompanies() || $this->isFindingContacts();
+    }
 }
