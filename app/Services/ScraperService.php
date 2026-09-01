@@ -18,15 +18,18 @@ class ScraperService
     }
 
     /**
-     * Set API key from user's stored keys
+     * Set API key from user's stored keys for the active scraper provider.
      */
     public function setApiKeyFromUser(User $user): self
     {
+        $service = $this->provider === 'scrapingbee' ? 'scrapingbee' : 'scraperapi';
+
         $apiKey = $user->apiKeys()
-            ->where('service', 'scraperapi')
+            ->where('service', $service)
             ->where('is_active', true)
             ->first();
 
+        // Only override the env default when the user has a key for the active provider.
         if ($apiKey) {
             $this->apiKey = $apiKey->api_key;
         }

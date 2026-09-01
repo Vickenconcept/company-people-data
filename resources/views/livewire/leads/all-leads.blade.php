@@ -201,6 +201,11 @@
                                     <span class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $statusColors[$request->status] ?? 'bg-slate-100 text-slate-800' }}">
                                         {{ ucfirst($request->status) }}
                                     </span>
+                                    @if($request->status === 'failed' && $request->error_message)
+                                        <div class="mt-1 max-w-[220px] truncate text-[10px] leading-snug text-rose-600" title="{{ $request->error_message }}">
+                                            {{ \Illuminate\Support\Str::limit($request->error_message, 80) }}
+                                        </div>
+                                    @endif
                                 </td>
                                 <td class="px-4 py-3 text-sm text-slate-800">{{ $request->target_count }}</td>
                                 <td class="px-4 py-3 text-sm text-slate-800">

@@ -25,6 +25,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $logsPath = storage_path('logs');
+        if (! is_dir($logsPath)) {
+            @mkdir($logsPath, 0775, true);
+        }
+
         RateLimiter::for('openai-email-generation', function (): Limit {
             return Limit::perMinute((int) env('MASS_EMAIL_GENERATION_RATE_PER_MINUTE', 20))
                 ->by('global-openai-email-generation');

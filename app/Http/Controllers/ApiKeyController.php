@@ -30,7 +30,7 @@ class ApiKeyController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'service' => 'required|string|in:openai,openrouter,scraperapi,apollo,prospeo,hunter',
+            'service' => 'required|string|in:openai,openrouter,scraperapi,scrapingbee,apollo,prospeo,hunter',
             'api_key' => 'required|string|max:500',
             'is_active' => 'nullable|boolean',
         ]);
