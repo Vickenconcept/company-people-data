@@ -12,11 +12,9 @@
 
                 <!-- Right: Auth card -->
                 <div class="flex w-full flex-col gap-6 justify-center items-center">
-                    <a href="{{ route('home') }}" class="flex items-center gap-2 justify-center md:justify-start" wire:navigate>
-                        <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/85 ring-1 ring-violet-200 shadow-sm backdrop-blur">
-                            <x-app-logo-icon class="size-6 text-violet-700" />
-                        </span>
-                        <span class="sr-only">{{ config('app.name', 'Laravel') }}</span>
+                    <a href="{{ route('home') }}" class="flex flex-col items-center gap-3 justify-center md:justify-start" wire:navigate>
+                        <x-app-logo-icon class="size-14 rounded-2xl shadow-md shadow-violet-300/40 ring-1 ring-violet-200/80" />
+                        <span class="text-base font-semibold text-slate-800">{{ config('app.name', 'Leads Dashboard') }}</span>
                     </a>
 
                     <div class="w-full rounded-3xl border border-violet-100/80 bg-white/95 px-8 py-8 shadow-xl shadow-violet-900/5 backdrop-blur">

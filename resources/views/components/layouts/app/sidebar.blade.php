@@ -13,9 +13,7 @@
             >
                 <div class="w-full px-4">
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-3 w-full rounded-2xl border border-white/20 bg-white/10 px-3 py-3 no-underline backdrop-blur-sm" wire:navigate>
-                        <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 ring-1 ring-white/30">
-                            <x-app-logo-icon class="size-5 text-white" />
-                        </span>
+                        <x-app-logo-icon class="size-10 rounded-xl ring-1 ring-white/30" />
                         <div class="min-w-0">
                             <div class="truncate text-sm font-semibold text-white">
                                 {{ config('app.name', 'Leads Dashboard') }}
@@ -164,7 +162,7 @@
                 <flux:header class="lg:hidden bg-white/90 backdrop-blur border-b border-violet-100 px-4 py-3">
                     <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
                     <a href="{{ route('dashboard') }}" class="ms-3 flex items-center gap-2" wire:navigate>
-                        <x-app-logo-icon class="size-7 text-slate-900" />
+                        <x-app-logo-icon class="size-8 rounded-lg" />
                         <span class="font-semibold text-sm text-slate-800">
                             {{ config('app.name', 'Leads Dashboard') }}
                         </span>
@@ -199,9 +197,7 @@
                     <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
                     <div class="px-4 mb-6">
                         <a href="{{ route('dashboard') }}" class="flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 px-3 py-3 no-underline backdrop-blur-sm" wire:navigate>
-                            <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 ring-1 ring-white/30">
-                                <x-app-logo-icon class="size-5 text-white" />
-                            </span>
+                            <x-app-logo-icon class="size-10 rounded-xl ring-1 ring-white/30" />
                             <div class="min-w-0">
                                 <div class="truncate text-base font-semibold text-white">
                                     {{ config('app.name', 'Leads Dashboard') }}
